@@ -1,3 +1,0 @@
-/tmp/tadis/cmake-build-debug/CMakeFiles/tadis.dir
-/tmp/tadis/cmake-build-debug/CMakeFiles/edit_cache.dir
-/tmp/tadis/cmake-build-debug/CMakeFiles/rebuild_cache.dir

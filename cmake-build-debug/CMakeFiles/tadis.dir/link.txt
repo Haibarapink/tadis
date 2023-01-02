@@ -1,1 +1,0 @@
-/usr/bin/c++  -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -g -rdynamic CMakeFiles/tadis.dir/src/bin/main.cpp.o -o ../bin/tadis 

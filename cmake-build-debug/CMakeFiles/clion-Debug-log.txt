@@ -1,5 +1,0 @@
-/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" -S /tmp/tadis -B /tmp/tadis/cmake-build-debug
-CMAKE_CXX_FLAGS is  -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1
--- Configuring done
--- Generating done
--- Build files have been written to: /tmp/tadis/cmake-build-debug
