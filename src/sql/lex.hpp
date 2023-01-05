@@ -86,7 +86,7 @@ public:
 private:
   void skip_blank()
   {
-    for (; p_ < input_.size() && input_[p_] != ' '; ++p_) {}
+    for (; p_ < input_.size() && input_[p_] == ' '; ++p_) {}
   }
 
   void to_upper(std::string &s)
@@ -96,6 +96,40 @@ private:
         ch = ch - 'a' + 'A';
       }
     }
+  }
+
+  Token parse_num()
+  {
+    Token token = Token::BAD_EXPR;
+
+    long num = 0;
+    size_t end = p_;
+    for (; input_[end] >= '0' && input_[end] <= '9'; end++) {
+      num = input_[end] - '0' + num * 10;
+    }
+
+    // float
+    if (input_[end] == '.') {
+      size_t old_end = end;
+      end++;
+      for (; input_[end] >= '0' && input_[end] <= '9'; end++) {}
+
+      if (old_end == end - 1) {
+        p_ = end;
+        return Token::BAD_EXPR;
+      }
+
+      std::string float_str{input_.data() + p_, end - p_ - 1};
+      cur_val_ = std::stof(float_str);
+      token = Token::FLOAT_T;
+      p_ = end;
+      return token;
+    }
+
+    p_ = end;
+    cur_val_ = num;
+    token = Token::INTEGER_T;
+    return token;
   }
 
   std::any cur_val_;
@@ -124,6 +158,7 @@ std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
              end++) {}
         rc = RC::SUCCESS;
         auto id = std::string{input_.data() + p_, end - p_};
+        auto cp_id = id;
         to_upper(id);
         token = Token::ID_T;
         if (auto iter = spec_token_.find(id); iter != spec_token_.end()) {
@@ -131,9 +166,26 @@ std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
         }
 
         if (token == Token::ID_T) {
-          cur_val_ = std::string{std::move(id)};
+          cur_val_ = std::string{std::move(cp_id)};
         }
 
+        p_ = end;
+        return {rc, token, last_p};
+      }
+
+      case '0': {
+        // 0...
+        if (p_ + 1 < input_.size() && (input_[p_ + 1] >= '0' || input_[p_ + 1] <= '9')) {
+          return {RC::SYNTAX_ERROR, Token::BAD_EXPR, last_p};
+        }
+        token = parse_num();
+        rc = token == Token::BAD_EXPR ? RC::SYNTAX_ERROR : RC::SUCCESS;
+        return {rc, token, last_p};
+      }
+
+      case '1' ... '9': {
+        token = parse_num();
+        rc = token == Token::BAD_EXPR ? RC::SYNTAX_ERROR : RC::SUCCESS;
         return {rc, token, last_p};
       }
 
@@ -142,9 +194,57 @@ std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
         return {RC::SUCCESS, Token::PLUS_T, last_p};
       }
 
+      case '-': {
+        if (p_ + 1 < input_.size() && input_[p_ + 1] >= '0' && input_[p_ + 1] <= '9') {
+          auto token = parse_num();
+          if (token == Token::INTEGER_T) {
+            cur_val_ = std::any_cast<long>(cur_val_) * -1;
+          } else if (token == Token::FLOAT_T) {
+            cur_val_ = std::any_cast<float>(cur_val_) * -1;
+          }
+          return {RC::SUCCESS, token, last_p};
+        }
+        p_++;
+        return {RC::SUCCESS, Token::MINUS_T, last_p};
+      }
+
       case '=': {
         p_++;
         return {RC::SUCCESS, Token::ASSIGN_T, last_p};
+      }
+
+      case '>': {
+        p_++;
+        return {RC::SUCCESS, Token::GREATER_T, last_p};
+      }
+
+      case '<': {
+        if (p_ + 1 < input_.size() && input_[p_ + 1] == '>') {
+          p_ += 2;
+          return {RC::SUCCESS, Token::NOT_EQ_T, last_p};
+        }
+        p_++;
+        return {RC::SUCCESS, Token::SMALLER_T, last_p};
+      }
+
+      case ',': {
+        p_++;
+        return {RC::SUCCESS, Token::COMMAS_T, last_p};
+      }
+
+      case '*': {
+        p_++;
+        return {RC::SUCCESS, Token::STAR_T, last_p};
+      }
+
+      case '.': {
+        p_++;
+        return {RC::SUCCESS, Token::DOT_T, last_p};
+      }
+
+      case ';': {
+        p_++;
+        return {RC::SUCCESS, Token::DOT_T, last_p};
       }
 
       default: {
@@ -152,6 +252,6 @@ std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
       }
     }
   }
-
+  // unuse code
   return {rc, token, last_p};
 }
