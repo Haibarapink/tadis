@@ -1,11 +1,22 @@
+/*
+ * @Author: pink haibarapink@gmail.com
+ * @Date: 2023-01-05 19:39:35
+ * @LastEditors: pink haibarapink@gmail.com
+ * @LastEditTime: 2023-01-06 15:26:24
+ * @FilePath: /tadis/src/common/logger.hpp
+ * @Description: 词法分析
+ */
 #pragma once
-#include "common/code.hpp"
+#include "common/rc.hpp"
 #include <any>
 #include <boost/core/noncopyable.hpp>
+#include <cassert>
 #include <tuple>
 #include <string>
 #include <string_view>
 #include <boost/noncopyable.hpp>
+
+#include <iostream>
 
 template <typename T>
 using LexResult = std::pair<RC, T>;
@@ -73,14 +84,19 @@ public:
     spec_token_.emplace("VALUES", Token::VALUES_T);
   }
 
-  // 如果下一个是期待的token 则返回， 否则就不动。
-  LexResult<Token> next_expect(Token token);
   LexResult<Token> next();
+
+  // 如果不一样 则返回前一个token,并且返回 RC::SYNTAX_ERROR和下一个 Token
+  LexResult<Token> next_if(Token t);
+
+  // peek 下一个 token，不会前进。
+  LexResult<Token> peek();
 
   std::any &cur_val_ref()
   {
     return cur_val_;
   }
+
   std::tuple<RC, Token, size_t> internal_next();
 
 private:
@@ -101,7 +117,6 @@ private:
   Token parse_num()
   {
     Token token = Token::BAD_EXPR;
-
     long num = 0;
     size_t end = p_;
     for (; input_[end] >= '0' && input_[end] <= '9'; end++) {
@@ -140,6 +155,34 @@ private:
 };
 
 template <typename Input>
+LexResult<Token> Lexer<Input>::next_if(Token t)
+{
+  auto [rc, tk, last_p] = internal_next();
+  if (tk != t) {
+    p_ = last_p;
+    rc = RC::SYNTAX_ERROR;
+  } else {
+    rc = RC::SUCCESS;
+  }
+  return {rc, tk};
+}
+
+template <typename Input>
+LexResult<Token> Lexer<Input>::next()
+{
+  auto [rc, tk, last_p] = internal_next();
+  return {rc, tk};
+}
+
+template <typename Input>
+LexResult<Token> Lexer<Input>::peek()
+{
+  auto [rc, tk, last_p] = internal_next();
+  p_ = last_p;
+  return {rc, tk};
+}
+
+template <typename Input>
 std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
 {
   RC rc = RC::SYNTAX_ERROR;
@@ -175,9 +218,10 @@ std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
 
       case '0': {
         // 0...
-        if (p_ + 1 < input_.size() && (input_[p_ + 1] >= '0' || input_[p_ + 1] <= '9')) {
+        if (p_ + 1 < input_.size() && (input_[p_ + 1] >= '0' && input_[p_ + 1] <= '9')) {
           return {RC::SYNTAX_ERROR, Token::BAD_EXPR, last_p};
         }
+
         token = parse_num();
         rc = token == Token::BAD_EXPR ? RC::SYNTAX_ERROR : RC::SUCCESS;
         return {rc, token, last_p};
@@ -196,6 +240,7 @@ std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
 
       case '-': {
         if (p_ + 1 < input_.size() && input_[p_ + 1] >= '0' && input_[p_ + 1] <= '9') {
+          p_++;
           auto token = parse_num();
           if (token == Token::INTEGER_T) {
             cur_val_ = std::any_cast<long>(cur_val_) * -1;

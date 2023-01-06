@@ -1,3 +1,4 @@
+
 #pragma once
 #include <boost/filesystem/fstream.hpp>
 #include <cstdint>
@@ -9,7 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <sys/types.h>
 #include <vector>
-#include "common/code.hpp"
+#include "common/rc.hpp"
 #include "storage/storage.hpp"
 
 // An example of storage, just a example!

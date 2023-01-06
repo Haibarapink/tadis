@@ -19,5 +19,6 @@ void init()
 
 int main(int argc, char *argv[])
 {
+  init();
   BOOST_LOG_TRIVIAL(debug) << "hello world";
 }

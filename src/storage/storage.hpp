@@ -1,5 +1,12 @@
+/*
+ * @Author: pink haibarapink@gmail.com
+ * @Date: 2023-01-02 19:34:49
+ * @LastEditors: pink haibarapink@gmail.com
+ * @LastEditTime: 2023-01-06 11:20:30
+ * @FilePath: /tadis/src/storage/storage.hpp
+ */
 #pragma once
-#include "common/code.hpp"
+#include "common/rc.hpp"
 #include <boost/core/noncopyable.hpp>
 #include <vector>
 #include <cstdint>

@@ -1,3 +1,12 @@
+/*
+ * @Author: pink haibarapink@gmail.com
+ * @Date: 2023-01-02 19:34:49
+ * @LastEditors: pink haibarapink@gmail.com
+ * @LastEditTime: 2023-01-06 11:47:18
+ * @FilePath: /tadis/src/common/rc.hpp
+ * @Description: rc result code
+ */
+
 #pragma once
 
 #include <map>

@@ -1,7 +1,7 @@
 #include <boost/core/lightweight_test.hpp>
 #include <string>
 #include <vector>
-#include <sql/lex.hpp>
+#include <sql/parser/lex.hpp>
 
 void basic_lexer_unit_test()
 {
@@ -108,8 +108,36 @@ void test_simple_select()
   }
 }
 
+void test_nexts()
+{
+  std::string s1 = "select id, name, age from student where num=-0.0123";
+  Lexer<std::string_view> lexer{std::string_view(s1.data(), s1.size())};
+  BOOST_TEST(lexer.next_if(Token::SELECT_T).first == RC::SUCCESS);
+  BOOST_TEST(lexer.next_if(Token::ID_T).first == RC::SUCCESS);
+  BOOST_TEST(lexer.next_if(Token::STAR_T).first == RC::SYNTAX_ERROR);
+  BOOST_TEST(lexer.next_if(Token::COMMAS_T).first == RC::SUCCESS);
+  BOOST_TEST(lexer.next_if(Token::DOT_T).first == RC::SYNTAX_ERROR);
+  BOOST_TEST(lexer.next_if(Token::ID_T).first == RC::SUCCESS);
+}
+
+void test_nexts2()
+{
+  std::string s2 = "0.01=-100,<>";
+  Lexer<std::string_view> lexer{std::string_view(s2.data(), s2.size())};
+  BOOST_TEST(lexer.next_if(Token::INTEGER_T).first == RC::SYNTAX_ERROR);
+  BOOST_TEST(lexer.next_if(Token::FLOAT_T).first == RC::SUCCESS);
+  BOOST_TEST(lexer.next_if(Token::ASSIGN_T).first == RC::SUCCESS);
+  BOOST_TEST(lexer.next_if(Token::INTEGER_T).first == RC::SUCCESS);
+  BOOST_TEST(std::any_cast<long>(lexer.cur_val_ref()) == -100);
+  BOOST_TEST(lexer.next_if(Token::COMMAS_T).first == RC::SUCCESS);
+  BOOST_TEST(lexer.next_if(Token::NOT_EQ_T).first == RC::SUCCESS);
+}
+
 int main(int argc, char *argv[])
 {
-  test_simple_select();
+  // test_simple_select();
+  // basic_lexer_unit_test();
+  // test_nexts();
+  test_nexts2();
   return boost::report_errors();
 }
