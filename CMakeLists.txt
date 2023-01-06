@@ -1,7 +1,16 @@
-cmake_minimum_required(VERSION 3.0)
-project(tadis)
-
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+PROJECT(tadis)
 SET(CMAKE_CXX_STANDARD 20)
+
+# Find Boost
+FIND_PACKAGE(Boost 1.74.0)
+IF (Boost_FOUND)
+    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+    MESSAGE(STATUS "Boost_INCLUDES_DIR = ${Boost_INCLUDE_DIRS}.")
+    MESSAGE(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
+    MESSAGE(STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
+ENDIF()
+
 SET(EXECUTABLE_OUTPUT_PATH  ${PROJECT_SOURCE_DIR}/build/bin)
 
 # For clangd ccls lsp
@@ -11,10 +20,31 @@ IF(DEBUG)
     ADD_DEFINITIONS(-DENABLE_DEBUG)
 ENDIF()
 
+# For logger 
+ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK=1)
+
 SET(CMAKE_CXX_FLAGS ${CMAKE_COMMON_FLAGS})
 SET(CMAKE_C_FLAGS ${CMAKE_COMMON_FLAGS})
 MESSAGE("CMAKE_CXX_FLAGS is " ${CMAKE_CXX_FLAGS})
 INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/src/" SYSTEM)
+
 ADD_EXECUTABLE(tadis ${PROJECT_SOURCE_DIR}/src/bin/main.cc)
+
+
+# Tests
 ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/src/tests/lex_test.cc)
-#  target_link_libraries(boost)
+ADD_EXECUTABLE(log_test ${PROJECT_SOURCE_DIR}/src/tests/log_test.cc)
+TARGET_LINK_LIBRARIES(log_test PRIVATE
+    pthread
+    boost_log
+    boost_thread
+    boost_log_setup
+)
+
+# unit tests
+ENABLE_TESTING()
+ADD_TEST(
+    NAME boost_test
+    COMMAND $<TARGET_FILE:lex_test>
+)
+

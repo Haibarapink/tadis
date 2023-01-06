@@ -12,7 +12,7 @@
 #include "common/code.hpp"
 #include "storage/storage.hpp"
 
-// An example of storage, It's very slow , just a example!
+// An example of storage, just a example!
 // key and value split by '\n' in the files.
 
 inline std::vector<uint8_t> str_to_vector(const std::string &str)
