@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 11:50:03
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-06 16:23:45
+ * @LastEditTime: 2023-01-06 18:38:05
  * @FilePath: /tadis/src/sql/sql_define.hpp
  * @Description: sql的定义，比如select ast, insert ast等等
  */
@@ -66,26 +66,6 @@ public:
   CondOp op_ = CondOp::UNDEFINED;
 };
 
-template <typename... QueriesType>
-class TQuery {
-public:
-  template <typename T>
-  bool is()
-  {
-    return std::holds_alternative<T>(query_);
-  }
-
-  // 先调用 is<T>() 来判断类型是否正确
-  template <typename T>
-  T &as_ref()
-  {
-    return std::get<T>(query_);
-  }
-
-private:
-  std::variant<QueriesType...> query_;
-};
-
 class Select {
 public:
   // select list
@@ -96,4 +76,4 @@ public:
   std::vector<Condition> cond_list_;
 };
 
-using Query = TQuery<Select>;
+using Query = std::variant<Select>;
