@@ -34,7 +34,17 @@ ADD_EXECUTABLE(tadis ${PROJECT_SOURCE_DIR}/src/bin/main.cc)
 # Tests
 ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/src/tests/lex_test.cc)
 ADD_EXECUTABLE(log_test ${PROJECT_SOURCE_DIR}/src/tests/log_test.cc)
+ADD_EXECUTABLE(parse_test ${PROJECT_SOURCE_DIR}/src/tests/parse_test.cc)
+
+# tests config
 TARGET_LINK_LIBRARIES(log_test PRIVATE
+    pthread
+    boost_log
+    boost_thread
+    boost_log_setup
+)
+
+TARGET_LINK_LIBRARIES(parse_test PRIVATE
     pthread
     boost_log
     boost_thread

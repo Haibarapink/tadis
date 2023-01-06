@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-05 19:39:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-06 15:26:24
+ * @LastEditTime: 2023-01-06 16:29:17
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 词法分析
  */
@@ -15,8 +15,6 @@
 #include <string>
 #include <string_view>
 #include <boost/noncopyable.hpp>
-
-#include <iostream>
 
 template <typename T>
 using LexResult = std::pair<RC, T>;
@@ -51,6 +49,8 @@ enum class Token {
   LBRACE_T,
   RBRACE_T,
 
+  IN_T,  // in
+
   BAD_EXPR  // fail!
 };
 
@@ -82,6 +82,8 @@ public:
     spec_token_.emplace("INFO", Token::INTO_T);
     spec_token_.emplace("TABLE", Token::TABLE_T);
     spec_token_.emplace("VALUES", Token::VALUES_T);
+
+    spec_token_.emplace("IN", Token::IN_T);
   }
 
   LexResult<Token> next();
@@ -290,6 +292,16 @@ std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
       case ';': {
         p_++;
         return {RC::SUCCESS, Token::DOT_T, last_p};
+      }
+
+      case '(': {
+        p_++;
+        return {RC::SUCCESS, Token::LBRACE_T, last_p};
+      }
+
+      case ')': {
+        p_++;
+        return {RC::SUCCESS, Token::RBRACE_T, last_p};
       }
 
       default: {

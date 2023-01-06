@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-02 19:34:49
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-06 11:20:30
+ * @LastEditTime: 2023-01-06 16:30:13
  * @FilePath: /tadis/src/storage/storage.hpp
  */
 #pragma once
@@ -16,6 +16,12 @@ using Bytes = std::vector<uint8_t>;
 template <typename T>
 class TStorage : public boost::noncopyable {
 public:
+  RC init(const std::string &path)
+  {
+    auto t = (T *)(this);
+    return t->init(path);
+  }
+
   RC get(const std::vector<uint8_t> &key, std::vector<uint8_t> &value)
   {
     auto t = (T *)(this);
