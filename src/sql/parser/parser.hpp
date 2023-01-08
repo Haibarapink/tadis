@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 13:58:11
+ * @LastEditTime: 2023-01-08 19:19:00
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 词法解析
  */
@@ -13,6 +13,7 @@
 #include <sql/parser/parser_define.hpp>
 #include <boost/noncopyable.hpp>
 #include <variant>
+#include <vector>
 
 template <typename InputType>
 class Parser : public boost::noncopyable {
@@ -28,12 +29,16 @@ public:
   }
 
 private:
+  RC parse_from(std::vector<std::string> &from_list);
+  RC parse_value(Value &v);
+  RC parse_conds(std::vector<Condition> &cond_list);
+  RC parse_attrs(std::vector<RelAttr> &attrs);
+
   // select
   RC parse_select();
-  RC parse_select_attrs(Select &s);
-  RC parse_select_from(Select &s);
-  RC parse_value(Value &v);
-  RC parse_select_conds(Select &s);
+
+  // delete
+  RC parse_delete();
 
 private:
   Lexer<InputType> lexer_;
@@ -48,9 +53,13 @@ RC Parser<InputType>::parse()
     case Token::SELECT_T: {
       return parse_select();
     }
-    // case Token::CREATE_T: {
+      // case Token::CREATE_T: {
 
-    // }
+      // }
+
+    case Token::DELETE_T: {
+      return parse_delete();
+    }
     default: {
       LOG_DEBUG << "Undefined token";
       return RC::SYNTAX_ERROR;
@@ -66,15 +75,15 @@ RC Parser<InputType>::parse_select()
 
   query_ = Select{};
   auto &&select = std::get<Select>(query_);
-  if (rc = parse_select_attrs(select); rc != RC::SUCCESS) {
+  if (rc = parse_attrs(select.selist_); rc != RC::SUCCESS) {
     LOG_DEBUG << "FAIL";
     return rc;
   }
-  if (rc = parse_select_from(select); rc != RC::SUCCESS) {
+  if (rc = parse_from(select.from_list_); rc != RC::SUCCESS) {
     LOG_DEBUG << "FAIL";
     return rc;
   }
-  if (rc = parse_select_conds(select); rc != RC::SUCCESS) {
+  if (rc = parse_conds(select.cond_list_); rc != RC::SUCCESS) {
     LOG_DEBUG << "FAIL";
     return rc;
   }
@@ -83,7 +92,7 @@ RC Parser<InputType>::parse_select()
 }
 
 template <typename InputType>
-RC Parser<InputType>::parse_select_attrs(Select &s)
+RC Parser<InputType>::parse_attrs(std::vector<RelAttr> &attrs)
 {
   while (true) {
     // Select * ...
@@ -98,10 +107,10 @@ RC Parser<InputType>::parse_select_attrs(Select &s)
       LOG_DEBUG << "Get START_T";
       RelAttr rel;
       rel.attribute_ = "*";
-      if (s.selist_.size() > 0) {
+      if (attrs.size() > 0) {
         return RC::SYNTAX_ERROR;
       }
-      s.selist_.emplace_back(std::move(rel));
+      attrs.emplace_back(std::move(rel));
       return rc;
     }
 
@@ -133,7 +142,7 @@ RC Parser<InputType>::parse_select_attrs(Select &s)
 
     LOG_DEBUG << "RelAttr " << rel_attr.table_ << "." << rel_attr.attribute_;
 
-    s.selist_.emplace_back(std::move(rel_attr));
+    attrs.emplace_back(std::move(rel_attr));
 
     auto next_res = lexer_.next_if(Token::COMMAS_T);
     if (next_res.first != RC::SUCCESS) {
@@ -146,7 +155,7 @@ RC Parser<InputType>::parse_select_attrs(Select &s)
 
 // Tables
 template <typename InputType>
-RC Parser<InputType>::parse_select_from(Select &s)
+RC Parser<InputType>::parse_from(std::vector<std::string> &from_list)
 {
   // From Token first
   auto [rc, tk] = lexer_.next();
@@ -159,7 +168,7 @@ RC Parser<InputType>::parse_select_from(Select &s)
       return rc1;
     }
     LOG_DEBUG << std::any_cast<std::string &>(lexer_.cur_val_ref());
-    s.from_list_.push_back(std::move(std::any_cast<std::string &>(lexer_.cur_val_ref())));
+    from_list.push_back(std::move(std::any_cast<std::string &>(lexer_.cur_val_ref())));
     auto [rc2, tk2] = lexer_.next_if(Token::COMMAS_T);
     if (rc2 != RC::SUCCESS) {
       break;
@@ -170,7 +179,7 @@ RC Parser<InputType>::parse_select_from(Select &s)
 }
 
 template <typename InputType>
-RC Parser<InputType>::parse_select_conds(Select &s)
+RC Parser<InputType>::parse_conds(std::vector<Condition> &cond_list)
 {
   auto [rc, tk] = lexer_.next();
   if (rc != RC::SUCCESS) {
@@ -204,7 +213,7 @@ RC Parser<InputType>::parse_select_conds(Select &s)
       return rc;
     }
 
-    s.cond_list_.emplace_back(std::move(c));
+    cond_list.emplace_back(std::move(c));
 
     auto [rc2, tk2] = lexer_.next_if(Token::COMMAS_T);
     if (rc2 != RC::SUCCESS) {
@@ -257,4 +266,38 @@ RC Parser<InputType>::parse_value(Value &v)
   }
 
   return RC::SUCCESS;
+}
+
+// DELETE FROM 表名称 WHERE 列名称 = 值
+// DELETE FROM 表
+// DELETE * FRRM 表
+template <typename InputType>
+RC Parser<InputType>::parse_delete()
+{
+  auto [rc, _] = lexer_.next_if(Token::DELETE_T);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  Delete d;
+
+  auto [rc2, tk2] = lexer_.next_if(Token::STAR_T);
+  if (rc = parse_from(d.tables_); rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  auto [rc3, tk3] = lexer_.peek();
+
+  // 我这里规定这种文法错误: DELETE * FROM t1 WHERE name='pink';
+  if (tk3 == Token::WHERE_T && tk2 == Token::STAR_T) {
+    return RC::SYNTAX_ERROR;
+  }
+
+  if (rc = parse_conds(d.conds_); rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  auto [rc4, tk4] = lexer_.next_if(Token::COLON_T);
+  query_ = std::move(d);
+  return rc4;
 }

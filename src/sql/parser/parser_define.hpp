@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 11:50:03
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 18:09:47
+ * @LastEditTime: 2023-01-08 19:19:18
  * @FilePath: /tadis/src/sql/sql_define.hpp
  * @Description: sql的定义，比如select ast, insert ast等等
  */
@@ -156,8 +156,13 @@ public:
   std::vector<Condition> cond_list_;
 };
 
+// DELETE FROM 表名称 WHERE 列名称 = 值
+// DELETE FROM 表
+// DELETE * FRRM 表
 class Delete {
 public:
+  std::vector<std::string> tables_;
+  std::vector<Condition> conds_;
 };
 
-using Query = std::variant<Select>;
+using Query = std::variant<Select, Delete>;

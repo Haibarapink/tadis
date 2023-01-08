@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:50:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 17:55:38
+ * @LastEditTime: 2023-01-08 19:25:56
  * @FilePath: /tadis/src/tests/parse_test.cc
  * @Description: test
  */
@@ -89,6 +89,27 @@ void where_test2()
   BOOST_TEST(select.cond_list_[2].op_ == CondOp::EQ);
 }
 
+void delete_test1()
+{
+  std::string s = "DELETE FROM t WHERE t.name='allo' , t.age=2;";
+  Parser<std::string> p{s};
+  BOOST_TEST(p.parse() == RC::SUCCESS);
+  auto d = std::get<Delete>(p.query());
+  BOOST_TEST(d.tables_[0] == "t");
+  BOOST_TEST(d.conds_[0].left_.get<RelAttr>().attribute_ == "name");
+  BOOST_TEST(d.conds_[0].right_.get<std::string>() == "allo");
+
+  BOOST_TEST(d.conds_[1].left_.get<RelAttr>().attribute_ == "age");
+  BOOST_TEST(d.conds_[1].right_.get<long>() == 2);
+}
+
+void delete_test_fail1()
+{
+  std::string s = "DELETE * FROM t WHERE t.name='allo' , t.age=2;";
+  Parser<std::string> p{s};
+  BOOST_TEST(p.parse() == RC::SYNTAX_ERROR);
+}
+
 int main(int argc, char *[])
 {
   basic_test();
@@ -96,5 +117,8 @@ int main(int argc, char *[])
   from_test();
   where_test();
   where_test2();
+
+  delete_test1();
+  delete_test_fail1();
   return boost::report_errors();
 }
