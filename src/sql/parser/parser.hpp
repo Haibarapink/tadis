@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 11:41:19
+ * @LastEditTime: 2023-01-08 13:24:53
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 词法解析
  */
@@ -32,7 +32,7 @@ private:
   // select
   RC parse_select();
   RC parse_select_attrs(Select &s);
-  RC parse_select_froms(Select &s);
+  RC parse_select_from(Select &s);
   RC parse_select_value(Value &v);
   RC parse_select_conds(Select &s);
 
@@ -71,7 +71,7 @@ RC Parser<InputType>::parse_select()
     LOG_DEBUG << "FAIL";
     return rc;
   }
-  if (rc = parse_select_froms(select); rc != RC::SUCCESS) {
+  if (rc = parse_select_from(select); rc != RC::SUCCESS) {
     LOG_DEBUG << "FAIL";
     return rc;
   }
@@ -99,6 +99,9 @@ RC Parser<InputType>::parse_select_attrs(Select &s)
       LOG_DEBUG << "Get START_T";
       RelAttr rel;
       rel.attribute_ = "*";
+      if (s.selist_.size() > 0) {
+        return RC::SYNTAX_ERROR;
+      }
       s.selist_.emplace_back(std::move(rel));
       return rc;
     }
@@ -144,7 +147,7 @@ RC Parser<InputType>::parse_select_attrs(Select &s)
 
 // Tables
 template <typename InputType>
-RC Parser<InputType>::parse_select_froms(Select &s)
+RC Parser<InputType>::parse_select_from(Select &s)
 {
   // From Token first
   auto [rc, tk] = lexer_.next();
@@ -156,8 +159,8 @@ RC Parser<InputType>::parse_select_froms(Select &s)
     if (rc1 != RC::SUCCESS) {
       return rc1;
     }
-    LOG_DEBUG << std::any_cast<std::string>(lexer_.cur_val_ref());
-    s.from_list_.push_back(std::move(std::any_cast<std::string>(lexer_.cur_val_ref())));
+    LOG_DEBUG << std::any_cast<std::string &>(lexer_.cur_val_ref());
+    s.from_list_.push_back(std::move(std::any_cast<std::string &>(lexer_.cur_val_ref())));
     auto [rc2, tk2] = lexer_.next_if(Token::COMMAS_T);
     if (rc2 != RC::SUCCESS) {
       break;
@@ -221,7 +224,8 @@ RC Parser<InputType>::parse_select_value(Value &v)
   }
 
   if (tk == Token::ID_T) {
-    RelAttr attr;
+    v.value_ = RelAttr{};
+    auto &&attr = v.get<RelAttr &>();
     v.type_ = AttrType::REL_ATTR;
     attr.table_ = std::move(std::any_cast<std::string>(lexer_.cur_val_ref()));
     auto [rc1, tk1] = lexer_.next_if(Token::DOT_T);
@@ -232,7 +236,6 @@ RC Parser<InputType>::parse_select_value(Value &v)
       }
       attr.attribute_ = std::move(std::any_cast<std::string>(lexer_.cur_val_ref()));
     }
-    v.value_ = attr;
     LOG_DEBUG << std::any_cast<RelAttr>(v.value_).table_ << "." << std::any_cast<RelAttr>(v.value_).attribute_;
   } else {
     switch (tk) {
@@ -249,7 +252,6 @@ RC Parser<InputType>::parse_select_value(Value &v)
         v.type_ = AttrType::STRING;
         break;
       case Token::NULL_T:
-        v.value_ = lexer_.cur_val_ref();
         v.type_ = AttrType::NULL_A;
         break;
     }

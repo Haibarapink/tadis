@@ -1,0 +1,7 @@
+[
+  {
+    "directory": "/home/pink/Public/tadis/build",
+    "command": "/usr/bin/c++  -I/home/pink/Public/tadis/src  -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -std=gnu++20 -o CMakeFiles/tadis.dir/src/bin/main.cpp.o -c /home/pink/Public/tadis/src/bin/main.cpp",
+    "file": "/home/pink/Public/tadis/src/bin/main.cpp"
+  }
+]

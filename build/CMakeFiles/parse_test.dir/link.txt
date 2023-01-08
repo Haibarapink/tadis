@@ -1,0 +1,1 @@
+/usr/bin/clang++  -g -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -g -rdynamic CMakeFiles/parse_test.dir/src/tests/parse_test.cc.o -o bin/parse_test  -lpthread -lboost_log -lboost_thread -lboost_log_setup 

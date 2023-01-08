@@ -1,0 +1,22 @@
+[
+{
+  "directory": "/home/pink/Public/tadis/build",
+  "command": "/usr/bin/clang++ -DBOOST_LOG_DYN_LINK=1 -I/home/pink/Public/tadis/src  -g -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -g -std=gnu++20 -o CMakeFiles/tadis.dir/src/bin/main.cc.o -c /home/pink/Public/tadis/src/bin/main.cc",
+  "file": "/home/pink/Public/tadis/src/bin/main.cc"
+},
+{
+  "directory": "/home/pink/Public/tadis/build",
+  "command": "/usr/bin/clang++ -DBOOST_LOG_DYN_LINK=1 -I/home/pink/Public/tadis/src  -g -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -g -std=gnu++20 -o CMakeFiles/lex_test.dir/src/tests/lex_test.cc.o -c /home/pink/Public/tadis/src/tests/lex_test.cc",
+  "file": "/home/pink/Public/tadis/src/tests/lex_test.cc"
+},
+{
+  "directory": "/home/pink/Public/tadis/build",
+  "command": "/usr/bin/clang++ -DBOOST_LOG_DYN_LINK=1 -I/home/pink/Public/tadis/src  -g -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -g -std=gnu++20 -o CMakeFiles/log_test.dir/src/tests/log_test.cc.o -c /home/pink/Public/tadis/src/tests/log_test.cc",
+  "file": "/home/pink/Public/tadis/src/tests/log_test.cc"
+},
+{
+  "directory": "/home/pink/Public/tadis/build",
+  "command": "/usr/bin/clang++ -DBOOST_LOG_DYN_LINK=1 -I/home/pink/Public/tadis/src  -g -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -g -std=gnu++20 -o CMakeFiles/parse_test.dir/src/tests/parse_test.cc.o -c /home/pink/Public/tadis/src/tests/parse_test.cc",
+  "file": "/home/pink/Public/tadis/src/tests/parse_test.cc"
+}
+]

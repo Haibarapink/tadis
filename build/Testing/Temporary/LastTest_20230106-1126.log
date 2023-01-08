@@ -1,0 +1,19 @@
+Start testing: Jan 06 22:34 CST
+----------------------------------------------------------
+1/1 Testing: boost_test
+1/1 Test: boost_test
+Command: "/home/pink/Public/tadis/build/bin/lex_test" "/home/pink/Public/tadis/build/bin/log_test"
+Directory: /home/pink/Public/tadis/build
+"boost_test" start time: Jan 06 22:34 CST
+Output:
+----------------------------------------------------------
+No errors detected.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"boost_test" end time: Jan 06 22:34 CST
+"boost_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Jan 06 22:34 CST

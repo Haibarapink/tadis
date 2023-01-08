@@ -1,0 +1,1 @@
+/usr/bin/clang++  -g -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -g -rdynamic CMakeFiles/tadis.dir/src/bin/main.cc.o -o bin/tadis 

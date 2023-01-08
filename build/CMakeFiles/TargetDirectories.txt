@@ -1,0 +1,7 @@
+/home/pink/Public/tadis/build/CMakeFiles/tadis.dir
+/home/pink/Public/tadis/build/CMakeFiles/lex_test.dir
+/home/pink/Public/tadis/build/CMakeFiles/log_test.dir
+/home/pink/Public/tadis/build/CMakeFiles/parse_test.dir
+/home/pink/Public/tadis/build/CMakeFiles/test.dir
+/home/pink/Public/tadis/build/CMakeFiles/edit_cache.dir
+/home/pink/Public/tadis/build/CMakeFiles/rebuild_cache.dir

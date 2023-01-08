@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:50:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 11:42:49
+ * @LastEditTime: 2023-01-08 12:46:35
  * @FilePath: /tadis/src/tests/parse_test.cc
  * @Description: test
  */
@@ -85,7 +85,7 @@ void where_test2()
   BOOST_TEST(select.cond_list_[0].op_ == CondOp::EQ);
 
   BOOST_TEST(select.cond_list_[2].left_.get<RelAttr>().attribute_ == "id");
-  BOOST_TEST(select.cond_list_[2].right_.get<float>() == 1111);
+  BOOST_TEST(select.cond_list_[2].right_.get<long>() == 1111);
   BOOST_TEST(select.cond_list_[2].op_ == CondOp::EQ);
 }
 
