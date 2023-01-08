@@ -1,1 +1,0 @@
-/usr/bin/clang++  -g -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -g -rdynamic CMakeFiles/lex_test.dir/src/tests/lex_test.cc.o -o bin/lex_test 
