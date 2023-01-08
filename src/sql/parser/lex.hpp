@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-05 19:39:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 17:54:41
+ * @LastEditTime: 2023-01-09 01:19:55
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 词法分析
  */
@@ -56,6 +56,20 @@ enum class Token {
   NULL_T,
   NULLABLE_T,
 
+  // sql datatypes
+  //    TEXT
+  S_CHAR_T,
+  S_VARCHAR_T,
+
+  // NUMBER
+  S_INT_T,
+  S_FLOAT_T,
+  S_DOUBLE_T,
+
+  // TODO date
+
+  //....
+
   BAD_EXPR  // fail!
 };
 
@@ -82,6 +96,7 @@ public:
     spec_token_.emplace("CREATE", Token::CREATE_T);
     spec_token_.emplace("DELETE", Token::DELETE_T);
 
+    spec_token_.emplace("INTO", Token::INTO_T);
     spec_token_.emplace("FROM", Token::FROM_T);
     spec_token_.emplace("WHERE", Token::WHERE_T);
     spec_token_.emplace("INFO", Token::INTO_T);
@@ -93,6 +108,8 @@ public:
     spec_token_.emplace("NOT", Token::NOT_T);
     spec_token_.emplace("NULL", Token::NULL_T);
     spec_token_.emplace("NULLABLE", Token::NULLABLE_T);
+
+    // For sql data types
   }
 
   LexResult<Token> next();

@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:50:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 19:25:56
+ * @LastEditTime: 2023-01-09 01:07:29
  * @FilePath: /tadis/src/tests/parse_test.cc
  * @Description: test
  */
@@ -110,6 +110,23 @@ void delete_test_fail1()
   BOOST_TEST(p.parse() == RC::SYNTAX_ERROR);
 }
 
+void insert_test1()
+{
+  std::string s = "INSERT INTO t VALUES (1,0.01, 'hello');";
+  Parser<std::string> parser{s};
+  BOOST_TEST(parser.parse() == RC::SUCCESS);
+  auto insert = std::get<Insert>(parser.query());
+  BOOST_TEST(insert.table_name_ == "t");
+  BOOST_TEST(insert.values_[0].get<long>() == 1);
+  //  BOOST_TEST(insert.values_[1].get<float>() == 0.01);
+  BOOST_TEST(insert.values_[2].get<std::string>() == "hello");
+}
+
+void insert_test2()
+{
+  std::string s = "INSERT INTO t (name, age, num) VALUES ('hello', 2,3);";
+}
+
 int main(int argc, char *[])
 {
   basic_test();
@@ -120,5 +137,7 @@ int main(int argc, char *[])
 
   delete_test1();
   delete_test_fail1();
+
+  insert_test1();
   return boost::report_errors();
 }

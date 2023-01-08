@@ -2,12 +2,13 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 19:19:00
+ * @LastEditTime: 2023-01-09 01:11:58
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 词法解析
  */
 #pragma once
 
+#include <cmath>
 #include <common/logger.hpp>
 #include <sql/parser/lex.hpp>
 #include <sql/parser/parser_define.hpp>
@@ -31,14 +32,22 @@ public:
 private:
   RC parse_from(std::vector<std::string> &from_list);
   RC parse_value(Value &v);
+  RC parse_values(std::vector<Value> &values);
   RC parse_conds(std::vector<Condition> &cond_list);
   RC parse_attrs(std::vector<RelAttr> &attrs);
+  RC parse_cols(std::vector<std::string> &cols);
 
   // select
   RC parse_select();
 
   // delete
   RC parse_delete();
+
+  // insert
+  RC parse_insert();
+
+  // create
+  RC parse_create();
 
 private:
   Lexer<InputType> lexer_;
@@ -53,12 +62,16 @@ RC Parser<InputType>::parse()
     case Token::SELECT_T: {
       return parse_select();
     }
-      // case Token::CREATE_T: {
-
-      // }
+    case Token::CREATE_T: {
+      return parse_create();
+    }
 
     case Token::DELETE_T: {
       return parse_delete();
+    }
+
+    case Token::INSERT_T: {
+      return parse_insert();
     }
     default: {
       LOG_DEBUG << "Undefined token";
@@ -150,6 +163,42 @@ RC Parser<InputType>::parse_attrs(std::vector<RelAttr> &attrs)
     }
   }
 
+  return RC::SUCCESS;
+}
+
+template <typename InputType>
+RC Parser<InputType>::parse_cols(std::vector<std::string> &cols)
+{
+  while (true) {
+    auto [rc, tk] = lexer_.next_if(Token::ID_T);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    cols.emplace_back(std::move(std::any_cast<std::string>(lexer_.cur_val_ref())));
+    auto [rc1, tk1] = lexer_.next_if(Token::COMMAS_T);
+    if (rc1 != RC::SUCCESS) {
+      break;
+    }
+  }
+
+  return RC::SUCCESS;
+}
+
+template <typename InputType>
+RC Parser<InputType>::parse_values(std::vector<Value> &values)
+{
+  while (true) {
+    Value v;
+    auto rc = parse_value(v);
+    if (v.type_ == AttrType::REL_ATTR || v.type_ == AttrType::UNDEFINED) {
+      return RC::SYNTAX_ERROR;
+    }
+    values.emplace_back(std::move(v));
+    auto [rc1, tk1] = lexer_.next_if(Token::COMMAS_T);
+    if (rc1 != RC::SUCCESS) {
+      break;
+    }
+  }
   return RC::SUCCESS;
 }
 
@@ -300,4 +349,76 @@ RC Parser<InputType>::parse_delete()
   auto [rc4, tk4] = lexer_.next_if(Token::COLON_T);
   query_ = std::move(d);
   return rc4;
+}
+
+// INSERT INTO 表名称 VALUES (值1, 值2,....)
+// INSERT INTO table_name (列1, 列2,...) VALUES (值1, 值2,....)
+template <typename InputType>
+RC Parser<InputType>::parse_insert()
+{
+  Insert insert;
+  if (lexer_.next_if(Token::INSERT_T).first != RC::SUCCESS) {
+    LOG_DEBUG << "it is not insert query";
+    return RC::SYNTAX_ERROR;
+  }
+  if (lexer_.next_if(Token::INTO_T).first != RC::SUCCESS) {
+    LOG_DEBUG << "'INTO' not exist";
+    return RC::SYNTAX_ERROR;
+  }
+  // table name
+  if (lexer_.next_if(Token::ID_T).first != RC::SUCCESS) {
+    LOG_DEBUG << "it is not a id";
+    return RC::SYNTAX_ERROR;
+  }
+
+  insert.table_name_ = std::move(std::any_cast<std::string>(lexer_.cur_val_ref()));
+  auto [rc, tk] = lexer_.next();
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+  if (tk == Token::LBRACE_T) {
+    rc = parse_cols(insert.cols_);
+    if (rc != RC::SUCCESS) {
+      LOG_DEBUG << "parse cols fail";
+      return rc;
+    }
+    if (lexer_.next_if(Token::RBRACE_T).first != RC::SUCCESS) {
+      LOG_DEBUG << "miss rbrace";
+      return RC::SYNTAX_ERROR;
+    }
+  } else if (tk == Token::VALUES_T) {
+    // DO NOTHING
+  } else {
+    LOG_DEBUG << "wrong token";
+    return RC::SYNTAX_ERROR;
+  }
+
+  if (tk != Token::VALUES_T) {
+    auto [rc1, tk1] = lexer_.next_if(Token::VALUES_T);
+    if (rc1 != RC::SUCCESS) {
+      LOG_DEBUG << "miss VALUES";
+      return rc1;
+    }
+  }
+
+  auto [rc1, tk1] = lexer_.next_if(Token::LBRACE_T);
+  if (rc1 != RC::SUCCESS) {
+    LOG_DEBUG << "miss lbrace";
+    return rc1;
+  }
+  if (parse_values(insert.values_) != RC::SUCCESS) {
+    LOG_DEBUG << "parse values fail";
+    return RC::SYNTAX_ERROR;
+  }
+  if (lexer_.next_if(Token::RBRACE_T).first != RC::SUCCESS) {
+    LOG_DEBUG << "miss rbrace";
+    return RC::SYNTAX_ERROR;
+  }
+  if (lexer_.next_if(Token::COLON_T).first != RC::SUCCESS) {
+    LOG_DEBUG << "miss colon";
+    return RC::SYNTAX_ERROR;
+  }
+
+  query_ = std::move(insert);
+  return RC::SUCCESS;
 }

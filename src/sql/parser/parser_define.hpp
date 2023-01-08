@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 11:50:03
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 19:19:18
+ * @LastEditTime: 2023-01-09 00:59:13
  * @FilePath: /tadis/src/sql/sql_define.hpp
  * @Description: sql的定义，比如select ast, insert ast等等
  */
@@ -165,4 +165,11 @@ public:
   std::vector<Condition> conds_;
 };
 
-using Query = std::variant<Select, Delete>;
+class Insert {
+public:
+  std::string table_name_;
+  std::vector<std::string> cols_;
+  std::vector<Value> values_;
+};
+
+using Query = std::variant<Select, Delete, Insert>;
