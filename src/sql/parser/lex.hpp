@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-05 19:39:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-06 16:29:17
+ * @LastEditTime: 2023-01-08 09:55:23
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 词法分析
  */
@@ -51,6 +51,11 @@ enum class Token {
 
   IN_T,  // in
 
+  IS_T,
+  NOT_T,
+  NULL_T,
+  NULLABLE_T,
+
   BAD_EXPR  // fail!
 };
 
@@ -84,6 +89,10 @@ public:
     spec_token_.emplace("VALUES", Token::VALUES_T);
 
     spec_token_.emplace("IN", Token::IN_T);
+    spec_token_.emplace("IS", Token::IS_T);
+    spec_token_.emplace("NOT", Token::NOT_T);
+    spec_token_.emplace("NULL", Token::NULL_T);
+    spec_token_.emplace("NULLABLE", Token::NULLABLE_T);
   }
 
   LexResult<Token> next();
@@ -291,7 +300,7 @@ std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
 
       case ';': {
         p_++;
-        return {RC::SUCCESS, Token::DOT_T, last_p};
+        return {RC::SUCCESS, Token::COLON_T, last_p};
       }
 
       case '(': {
@@ -302,6 +311,18 @@ std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
       case ')': {
         p_++;
         return {RC::SUCCESS, Token::RBRACE_T, last_p};
+      }
+
+      case '"': {
+        auto end = p_ + 1;
+        for (; end < input_.size() && input_[end] != '"'; ++end) {}
+        if (end == p_ + 1) {
+          return {RC::SYNTAX_ERROR, token, last_p};
+        }
+        cur_val_ = std::string{input_.data() + p_ + 1, end - p_ - 1};
+        p_ = end + 1;
+
+        return {RC::SUCCESS, Token::STRING_T, last_p};
       }
 
       default: {

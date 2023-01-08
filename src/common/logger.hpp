@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-05 19:39:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-06 11:46:38
+ * @LastEditTime: 2023-01-08 11:43:33
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 对 boost log的包装
  */
@@ -35,9 +35,11 @@ inline void add_file_log(const std::string &file)
   logging::add_file_log(file);
 }
 
-#define LOG_TRACE BOOST_LOG_TRIVIAL(trace)
-#define LOG_DEBUG BOOST_LOG_TRIVIAL(debug)
-#define LOG_INFO BOOST_LOG_TRIVIAL(info)
-#define LOG_WARN BOOST_LOG_TRIVIAL(warning)
-#define LOG_ERROR BOOST_LOG_TRIVIAL(error)
-#define LOG_FATAL BOOST_LOG_TRIVIAL(fatal)
+#define BOOST_LOG_WRAP(level) BOOST_LOG_TRIVIAL(level) << "[ " << __FILE__ << ":" << __LINE__ << "]"
+
+#define LOG_TRACE BOOST_LOG_WRAP(trace)
+#define LOG_DEBUG BOOST_LOG_WRAP(debug)
+#define LOG_INFO BOOST_LOG_WRAP(info)
+#define LOG_WARN BOOST_LOG_WRAP(warning)
+#define LOG_ERROR BOOST_LOG_WRAP(error)
+#define LOG_FATAL BOOST_LOG_WRAP(fatal)

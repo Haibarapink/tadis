@@ -55,6 +55,6 @@ TARGET_LINK_LIBRARIES(parse_test PRIVATE
 ENABLE_TESTING()
 ADD_TEST(
     NAME boost_test
-    COMMAND $<TARGET_FILE:lex_test> $<TARGET_FILE:log_test>
+    COMMAND $<TARGET_FILE:lex_test> $<TARGET_FILE:log_test> $<TARGET_FILE:parse_test>
 )
 
