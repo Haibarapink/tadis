@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 11:50:03
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 09:37:49
+ * @LastEditTime: 2023-01-08 18:00:23
  * @FilePath: /tadis/src/sql/sql_define.hpp
  * @Description: sql的定义，比如select ast, insert ast等等
  */
@@ -64,14 +64,6 @@ enum class AttrType { UNDEFINED, REL_ATTR, STRING, INTS, FLOATS, NULL_A, QUERY }
 
 class Value {
 public:
-  //   Value() = default;
-  //   ~Value() = default;
-
-  //   Value(const Value &) = default;
-  //   Value &operator=(const Value &) = default;
-  //   Value(Value &&) = default;
-  //   Value &operator=(Value &&) = default;
-
   template <typename T>
   void init(T v, AttrType t)
   {
@@ -162,6 +154,10 @@ public:
   std::vector<std::string> from_list_;
   // condition list
   std::vector<Condition> cond_list_;
+};
+
+class Delete {
+public:
 };
 
 using Query = std::variant<Select>;

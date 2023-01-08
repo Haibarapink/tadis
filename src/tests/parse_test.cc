@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:50:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 12:46:35
+ * @LastEditTime: 2023-01-08 17:55:38
  * @FilePath: /tadis/src/tests/parse_test.cc
  * @Description: test
  */
@@ -47,7 +47,7 @@ void from_test()
 
 void where_test()
 {
-  std::string s = "select * from school, student, teacher where student.name=\"XuPing\", school.name=\"AAU\", "
+  std::string s = "select * from school, student, teacher where student.name=\'XuPing\', school.name=\'AAU\', "
                   "student.id=1111, 2=3;";
   std::vector<std::string> tables = {"school", "student", "teacher"};
   Parser<std::string> p(s);

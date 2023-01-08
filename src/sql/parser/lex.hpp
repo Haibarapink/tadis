@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-05 19:39:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 09:55:23
+ * @LastEditTime: 2023-01-08 17:54:41
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 词法分析
  */
@@ -313,9 +313,9 @@ std::tuple<RC, Token, size_t> Lexer<Input>::internal_next()
         return {RC::SUCCESS, Token::RBRACE_T, last_p};
       }
 
-      case '"': {
+      case '\'': {
         auto end = p_ + 1;
-        for (; end < input_.size() && input_[end] != '"'; ++end) {}
+        for (; end < input_.size() && input_[end] != '\''; ++end) {}
         if (end == p_ + 1) {
           return {RC::SYNTAX_ERROR, token, last_p};
         }

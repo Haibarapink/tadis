@@ -2,13 +2,12 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 13:24:53
+ * @LastEditTime: 2023-01-08 13:58:11
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 词法解析
  */
 #pragma once
 
-#include <any>
 #include <common/logger.hpp>
 #include <sql/parser/lex.hpp>
 #include <sql/parser/parser_define.hpp>
@@ -33,7 +32,7 @@ private:
   RC parse_select();
   RC parse_select_attrs(Select &s);
   RC parse_select_from(Select &s);
-  RC parse_select_value(Value &v);
+  RC parse_value(Value &v);
   RC parse_select_conds(Select &s);
 
 private:
@@ -186,7 +185,7 @@ RC Parser<InputType>::parse_select_conds(Select &s)
   while (true) {
     Condition c;
 
-    if (rc = parse_select_value(c.left_); rc != RC::SUCCESS) {
+    if (rc = parse_value(c.left_); rc != RC::SUCCESS) {
       return rc;
     }
 
@@ -201,7 +200,7 @@ RC Parser<InputType>::parse_select_conds(Select &s)
     }
     c.op_ = op;
 
-    if (rc = parse_select_value(c.right_); rc != RC::SUCCESS) {
+    if (rc = parse_value(c.right_); rc != RC::SUCCESS) {
       return rc;
     }
 
@@ -216,7 +215,7 @@ RC Parser<InputType>::parse_select_conds(Select &s)
 }
 
 template <typename InputType>
-RC Parser<InputType>::parse_select_value(Value &v)
+RC Parser<InputType>::parse_value(Value &v)
 {
   auto [rc, tk] = lexer_.next();
   if (rc != RC::SUCCESS) {

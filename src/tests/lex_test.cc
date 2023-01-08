@@ -135,7 +135,7 @@ void test_nexts2()
 
 void test_string()
 {
-  std::string s = " \"Hello\"123+\"World\"";
+  std::string s = " \'Hello\'123+\'World\'";
   Lexer<std::string> lexer{s};
   BOOST_TEST(lexer.next_if(Token::STRING_T).first == RC::SUCCESS);
   BOOST_TEST(std::any_cast<std::string>(lexer.cur_val_ref()) == "Hello");
