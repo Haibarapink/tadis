@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-02 19:34:49
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 00:57:23
+ * @LastEditTime: 2023-01-09 22:59:10
  * @FilePath: /tadis/src/common/rc.hpp
  * @Description: rc result code
  */
@@ -16,6 +16,7 @@
 enum class RC {
   INTERNAL_ERROR,
   SYNTAX_ERROR,
+  KEY_NOT_EXIST,
   SUCCESS,
 };
 

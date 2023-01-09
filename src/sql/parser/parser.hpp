@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 14:30:05
+ * @LastEditTime: 2023-01-09 16:21:04
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 词法解析
  */
@@ -11,7 +11,7 @@
 #include "common/rc.hpp"
 #include <cmath>
 #include <common/logger.hpp>
-#include <sql/parser/lex.hpp>
+#include <sql/parser/lexer.hpp>
 #include <sql/parser/ast.hpp>
 #include <boost/noncopyable.hpp>
 #include <variant>
@@ -25,7 +25,7 @@ public:
 
   RC parse();
 
-  const Query &query()
+  const QueryAst &query()
   {
     return query_;
   }
@@ -55,7 +55,7 @@ private:
 
 private:
   Lexer<InputType> lexer_;
-  Query query_;
+  QueryAst query_;
 };
 
 template <typename InputType>
@@ -90,8 +90,8 @@ RC Parser<InputType>::parse_select()
   auto [rc, token] = lexer_.next();
   assert(token == Token::SELECT_T && rc == RC::SUCCESS);
 
-  query_ = Select{};
-  auto &&select = std::get<Select>(query_);
+  query_ = SelectAst{};
+  auto &&select = std::get<SelectAst>(query_);
   if (rc = parse_attrs(select.selist_); rc != RC::SUCCESS) {
     LOG_DEBUG << "FAIL";
     return rc;
@@ -332,7 +332,7 @@ RC Parser<InputType>::parse_delete()
     return rc;
   }
 
-  Delete d;
+  DeleteAst d;
 
   auto [rc2, tk2] = lexer_.next_if(Token::STAR_T);
   if (rc = parse_from(d.tables_); rc != RC::SUCCESS) {
@@ -360,7 +360,7 @@ RC Parser<InputType>::parse_delete()
 template <typename InputType>
 RC Parser<InputType>::parse_insert()
 {
-  Insert insert;
+  InsertAst insert;
   if (lexer_.next_if(Token::INSERT_T).first != RC::SUCCESS) {
     LOG_DEBUG << "it is not insert query";
     return RC::SYNTAX_ERROR;
@@ -456,7 +456,7 @@ RC Parser<InputType>::parse_create_table()
     LOG_DEBUG << "miss 'TABLE'";
     return RC::SYNTAX_ERROR;
   }
-  CreateTable create_table;
+  CreateTableAst create_table;
   if (!rc_success(lexer_.next_if(Token::ID_T).first)) {
     LOG_DEBUG << "miss table's name";
     return RC::SYNTAX_ERROR;

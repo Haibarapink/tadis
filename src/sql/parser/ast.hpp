@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 11:50:03
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 12:11:56
+ * @LastEditTime: 2023-01-09 17:04:21
  * @FilePath: /tadis/src/sql/sql_define.hpp
  * @Description: sql的定义，比如select ast, insert ast等等
  */
@@ -10,7 +10,7 @@
 #pragma once
 
 #include <common/rc.hpp>
-#include <sql/parser/lex.hpp>
+#include <sql/parser/lexer.hpp>
 #include <any>
 #include <string>
 #include <vector>
@@ -146,7 +146,7 @@ public:
   }
 };
 
-class Select {
+class SelectAst {
 public:
   // select list
   std::vector<RelAttr> selist_;
@@ -159,13 +159,13 @@ public:
 // DELETE FROM 表名称 WHERE 列名称 = 值
 // DELETE FROM 表
 // DELETE * FRRM 表
-class Delete {
+class DeleteAst {
 public:
   std::vector<std::string> tables_;
   std::vector<Condition> conds_;
 };
 
-class Insert {
+class InsertAst {
 public:
   std::string table_name_;
   std::vector<std::string> cols_;
@@ -216,10 +216,9 @@ public:
 // City varchar(255)
 // )
 // 支持类型: float, int, char, varchar
-class CreateTable {
+class CreateTableAst {
 public:
   std::vector<ColAttr> col_attrs_;
   std::string table_name_;
 };
-
-using Query = std::variant<Select, Delete, Insert, CreateTable>;
+using QueryAst = std::variant<SelectAst, DeleteAst, InsertAst, CreateTableAst>;

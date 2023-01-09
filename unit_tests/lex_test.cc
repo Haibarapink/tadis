@@ -1,7 +1,7 @@
 #include <boost/core/lightweight_test.hpp>
 #include <string>
 #include <vector>
-#include <sql/parser/lex.hpp>
+#include <sql/parser/lexer.hpp>
 
 // void basic_lexer_unit_test()
 // {

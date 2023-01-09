@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-02 19:34:49
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-06 16:30:13
+ * @LastEditTime: 2023-01-09 23:22:57
  * @FilePath: /tadis/src/storage/storage.hpp
  */
 #pragma once
@@ -49,10 +49,9 @@ public:
 
 class Storage : public boost::noncopyable {
 public:
-  virtual ~Storage() = 0;
-
   virtual RC get(const std::vector<uint8_t> &key, std::vector<uint8_t> &value) = 0;
-  virtual RC remove(const std::vector<uint> &key) = 0;
+  virtual RC set(std::vector<uint8_t> key, std::vector<uint8_t> value) = 0;
+  virtual RC remove(const std::vector<uint8_t> &key) = 0;
   virtual RC flush() = 0;
   virtual RC close() = 0;
 };
