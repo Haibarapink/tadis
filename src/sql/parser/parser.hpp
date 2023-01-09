@@ -2,9 +2,9 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 16:21:04
+ * @LastEditTime: 2023-01-09 23:27:46
  * @FilePath: /tadis/src/sql/parser/parser.hpp
- * @Description: 词法解析
+ * @Description: 语法解析
  */
 #pragma once
 
