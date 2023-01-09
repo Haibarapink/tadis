@@ -32,9 +32,9 @@ ADD_EXECUTABLE(tadis ${PROJECT_SOURCE_DIR}/src/main.cc)
 
 
 # Tests
-ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/src/unit_tests/lex_test.cc)
-ADD_EXECUTABLE(log_test ${PROJECT_SOURCE_DIR}/src/unit_tests/log_test.cc)
-ADD_EXECUTABLE(parse_test ${PROJECT_SOURCE_DIR}/src/unit_tests/parse_test.cc)
+ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/unit_tests/lex_test.cc)
+ADD_EXECUTABLE(log_test ${PROJECT_SOURCE_DIR}/unit_tests/log_test.cc)
+ADD_EXECUTABLE(parse_test ${PROJECT_SOURCE_DIR}/unit_tests/parse_test.cc)
 
 # tests config
 TARGET_LINK_LIBRARIES(log_test PRIVATE
