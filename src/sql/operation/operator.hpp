@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-09 13:44:17
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 14:34:15
+ * @LastEditTime: 2023-01-09 23:26:05
  * @FilePath: /tadis/src/sql/operation/operator.hpp
  * @Description: 执行 Operator
  */
@@ -14,7 +14,6 @@
 class Operator : public boost::noncopyable {
 public:
   Operator() = default;
-  virtual ~Operator() = 0;
 
   virtual RC open() = 0;
   virtual RC next() = 0;
