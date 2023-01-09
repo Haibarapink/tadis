@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 11:50:03
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 00:59:13
+ * @LastEditTime: 2023-01-09 12:11:56
  * @FilePath: /tadis/src/sql/sql_define.hpp
  * @Description: sql的定义，比如select ast, insert ast等等
  */
@@ -172,4 +172,54 @@ public:
   std::vector<Value> values_;
 };
 
-using Query = std::variant<Select, Delete, Insert>;
+class ColAttr {
+public:
+  std::string name_;
+  std::string type_;
+  size_t size_ = 0;
+
+  ColAttr() = default;
+  ~ColAttr() = default;
+  ColAttr(const ColAttr &other) : name_(other.name_), type_(other.type_), size_(other.size_)
+  {}
+
+  ColAttr &operator=(const ColAttr &other)
+  {
+    name_ = other.name_;
+    type_ = other.type_;
+    size_ = other.size_;
+    return *this;
+  }
+
+  ColAttr(ColAttr &&other) : name_(std::move(other.name_)), type_(other.type_), size_(other.size_)
+  {
+    other.size_ = 0;
+  }
+
+  ColAttr &operator=(ColAttr &&other)
+  {
+    name_ = std::move(other.name_);
+    type_ = std::move(other.type_);
+    size_ = std::move(other.size_);
+    other.size_ = 0;
+    return *this;
+  }
+};
+
+// Example:
+// CREATE TABLE Persons
+// (
+// Id_P int,
+// LastName varchar(255),
+// FirstName varchar(255),
+// Address varchar(255),
+// City varchar(255)
+// )
+// 支持类型: float, int, char, varchar
+class CreateTable {
+public:
+  std::vector<ColAttr> col_attrs_;
+  std::string table_name_;
+};
+
+using Query = std::variant<Select, Delete, Insert, CreateTable>;

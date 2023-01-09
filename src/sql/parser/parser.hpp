@@ -2,12 +2,13 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 01:11:58
+ * @LastEditTime: 2023-01-09 13:25:04
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 词法解析
  */
 #pragma once
 
+#include "common/rc.hpp"
 #include <cmath>
 #include <common/logger.hpp>
 #include <sql/parser/lex.hpp>
@@ -36,7 +37,8 @@ private:
   RC parse_conds(std::vector<Condition> &cond_list);
   RC parse_attrs(std::vector<RelAttr> &attrs);
   RC parse_cols(std::vector<std::string> &cols);
-
+  RC parse_col_attrs(std::vector<ColAttr> &col_attrs);
+  RC parse_col_data_type(ColAttr &c);
   // select
   RC parse_select();
 
@@ -48,6 +50,8 @@ private:
 
   // create
   RC parse_create();
+  RC parse_create_table();
+  // RC parse_create_index();
 
 private:
   Lexer<InputType> lexer_;
@@ -420,5 +424,122 @@ RC Parser<InputType>::parse_insert()
   }
 
   query_ = std::move(insert);
+  return RC::SUCCESS;
+}
+
+template <typename InputType>
+RC Parser<InputType>::parse_create()
+{
+  if (!rc_success(lexer_.next_if(Token::CREATE_T).first)) {
+    return RC::SYNTAX_ERROR;
+  }
+  auto [rc, tk] = lexer_.peek();
+  if (!rc_success(RC::SUCCESS)) {
+    return RC::SYNTAX_ERROR;
+  }
+
+  switch (tk) {
+    case Token::TABLE_T:
+      return parse_create_table();
+    // TODO index
+    default:
+      return RC::SYNTAX_ERROR;
+  }
+  // make compiler happy
+  return RC::SUCCESS;
+}
+
+template <typename InputType>
+RC Parser<InputType>::parse_create_table()
+{
+  if (!rc_success(lexer_.next_if(Token::TABLE_T).first)) {
+    LOG_DEBUG << "miss 'TABLE'";
+    return RC::SYNTAX_ERROR;
+  }
+  CreateTable create_table;
+  if (!rc_success(lexer_.next_if(Token::ID_T).first)) {
+    LOG_DEBUG << "miss table's name";
+    return RC::SYNTAX_ERROR;
+  }
+  create_table.table_name_ = std::move(std::any_cast<std::string &>(lexer_.cur_val_ref()));
+  if (!rc_success(lexer_.next_if(Token::LBRACE_T).first)) {
+    LOG_DEBUG << "miss '('";
+    return RC::SYNTAX_ERROR;
+  }
+  if (!rc_success(parse_col_attrs(create_table.col_attrs_))) {
+    LOG_DEBUG << "parse colums' attributes fail";
+    return RC::SYNTAX_ERROR;
+  }
+  if (!rc_success(lexer_.next_if(Token::RBRACE_T).first)) {
+    LOG_DEBUG << "miss ')'";
+    return RC::SYNTAX_ERROR;
+  }
+  if (!rc_success(lexer_.next_if(Token::COLON_T).first)) {
+    LOG_DEBUG << "miss ';'";
+    return RC::SYNTAX_ERROR;
+  }
+  query_ = create_table;
+  return RC::SUCCESS;
+}
+
+template <typename InputType>
+RC Parser<InputType>::parse_col_attrs(std::vector<ColAttr> &col_attrs)
+{
+  while (true) {
+    if (!rc_success(lexer_.next_if(Token::ID_T).first)) {
+      LOG_DEBUG << "expect Token::ID_T";
+      return RC::SYNTAX_ERROR;
+    }
+    ColAttr c;
+    c.name_ = std::move(std::any_cast<std::string &>(lexer_.cur_val_ref()));
+    if (!rc_success(parse_col_data_type(c))) {
+      return RC::SYNTAX_ERROR;
+    }
+    col_attrs.emplace_back(std::move(c));
+    if (!rc_success(lexer_.next_if(Token::COMMAS_T).first)) {
+      break;
+    }
+  }
+
+  return RC::SUCCESS;
+}
+
+template <typename InputType>
+RC Parser<InputType>::parse_col_data_type(ColAttr &c)
+{
+  auto [rc, tk] = lexer_.next();
+  if (!rc_success(rc)) {
+    return RC::SYNTAX_ERROR;
+  }
+  switch (tk) {
+    case Token::S_INT_T:
+      c.type_ = "INT";
+      break;
+    case Token::S_FLOAT_T:
+      c.type_ = "FLOAT";
+      break;
+    case Token::S_CHAR_T:
+    case Token::S_VARCHAR_T: {
+      c.type_ = tk == Token::S_CHAR_T ? "CHAR" : "VARCHAR";
+      if (!rc_success(lexer_.next_if(Token::LBRACE_T).first)) {
+        LOG_DEBUG << "miss '('";
+        return RC::SYNTAX_ERROR;
+      }
+      if (!rc_success(lexer_.next_if(Token::INTEGER_T).first)) {
+        LOG_DEBUG << "miss text attribute's size";
+        return RC::SYNTAX_ERROR;
+      }
+      c.size_ = static_cast<size_t>(std::any_cast<long>(lexer_.cur_val_ref()));
+      if (!rc_success(lexer_.next_if(Token::RBRACE_T).first)) {
+        LOG_DEBUG << "miss ')'";
+        return RC::SYNTAX_ERROR;
+      }
+    } break;
+    default: {
+      LOG_DEBUG << "wrong Token";
+      return RC::SYNTAX_ERROR;
+    }
+  }
+
   return RC::SUCCESS;
 }

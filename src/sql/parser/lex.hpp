@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-05 19:39:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 01:19:55
+ * @LastEditTime: 2023-01-09 11:22:48
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 词法分析
  */
@@ -64,7 +64,7 @@ enum class Token {
   // NUMBER
   S_INT_T,
   S_FLOAT_T,
-  S_DOUBLE_T,
+  // S_DOUBLE_T,
 
   // TODO date
 
@@ -110,6 +110,10 @@ public:
     spec_token_.emplace("NULLABLE", Token::NULLABLE_T);
 
     // For sql data types
+    spec_token_.emplace("CHAR", Token::S_CHAR_T);
+    spec_token_.emplace("VARCHAR", Token::S_VARCHAR_T);
+    spec_token_.emplace("INT", Token::S_INT_T);
+    spec_token_.emplace("FLOAT", Token::FLOAT_T);
   }
 
   LexResult<Token> next();

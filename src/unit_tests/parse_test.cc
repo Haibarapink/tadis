@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:50:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 01:07:29
+ * @LastEditTime: 2023-01-09 13:23:50
  * @FilePath: /tadis/src/tests/parse_test.cc
  * @Description: test
  */
@@ -127,6 +127,24 @@ void insert_test2()
   std::string s = "INSERT INTO t (name, age, num) VALUES ('hello', 2,3);";
 }
 
+void create_test1()
+{
+  std::string s = "CREATE TABLE t (name varchar(100), age int, school char(100));";
+  Parser<std::string> parser{s};
+  BOOST_TEST(parser.parse() == RC::SUCCESS);
+  auto c = std::get<CreateTable>(parser.query());
+  BOOST_TEST(c.table_name_ == "t");
+  BOOST_TEST(c.col_attrs_[0].name_ == "name");
+  BOOST_TEST(c.col_attrs_[0].type_ == "VARCHAR");
+  BOOST_TEST(c.col_attrs_[0].size_ == 100);
+  BOOST_TEST(c.col_attrs_[1].name_ == "age");
+  BOOST_TEST(c.col_attrs_[1].type_ == "INT");
+  BOOST_TEST(c.col_attrs_[1].size_ == 0);
+  BOOST_TEST(c.col_attrs_[2].name_ == "school");
+  BOOST_TEST(c.col_attrs_[2].type_ == "CHAR");
+  BOOST_TEST(c.col_attrs_[2].size_ == 100);
+}
+
 int main(int argc, char *[])
 {
   basic_test();
@@ -139,5 +157,6 @@ int main(int argc, char *[])
   delete_test_fail1();
 
   insert_test1();
+  create_test1();
   return boost::report_errors();
 }
