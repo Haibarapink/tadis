@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 13:36:58
+ * @LastEditTime: 2023-01-09 14:30:05
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 词法解析
  */
@@ -12,7 +12,7 @@
 #include <cmath>
 #include <common/logger.hpp>
 #include <sql/parser/lex.hpp>
-#include <sql/parser/sql_dfs.hpp>
+#include <sql/parser/ast.hpp>
 #include <boost/noncopyable.hpp>
 #include <variant>
 #include <vector>
