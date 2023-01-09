@@ -22,6 +22,7 @@
 
   ```
   > git clone https://github.com/Haibarapink/tadis.git
+  > cd tadis
   > mkdir build && cd build
   > cmake ../
   > make 
