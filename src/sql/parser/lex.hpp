@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-05 19:39:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 11:22:48
+ * @LastEditTime: 2023-01-09 13:37:50
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 词法分析
  */
@@ -113,7 +113,7 @@ public:
     spec_token_.emplace("CHAR", Token::S_CHAR_T);
     spec_token_.emplace("VARCHAR", Token::S_VARCHAR_T);
     spec_token_.emplace("INT", Token::S_INT_T);
-    spec_token_.emplace("FLOAT", Token::FLOAT_T);
+    spec_token_.emplace("FLOAT", Token::S_FLOAT_T);
   }
 
   LexResult<Token> next();

@@ -2,11 +2,10 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:50:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 13:23:50
+ * @LastEditTime: 2023-01-09 13:34:18
  * @FilePath: /tadis/src/tests/parse_test.cc
  * @Description: test
  */
-#include "sql/parser/parser_define.hpp"
 #include <boost/config/workaround.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include <boost/test/detail/global_typedef.hpp>
@@ -145,6 +144,17 @@ void create_test1()
   BOOST_TEST(c.col_attrs_[2].size_ == 100);
 }
 
+void create_test2()
+{
+  std::string s = "CREATE TABLE t (age float, school char(100));";
+  Parser<std::string> parser{s};
+  BOOST_TEST(parser.parse() == RC::SUCCESS);
+  auto c = std::get<CreateTable>(parser.query());
+  BOOST_TEST(c.table_name_ == "t");
+  BOOST_TEST(c.col_attrs_[0].name_ == "age");
+  BOOST_TEST(c.col_attrs_[0].type_ == "FLOAT");
+}
+
 int main(int argc, char *[])
 {
   basic_test();
@@ -157,6 +167,8 @@ int main(int argc, char *[])
   delete_test_fail1();
 
   insert_test1();
+
   create_test1();
+  create_test2();
   return boost::report_errors();
 }

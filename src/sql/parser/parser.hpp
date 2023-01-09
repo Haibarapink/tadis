@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 13:25:04
+ * @LastEditTime: 2023-01-09 13:36:58
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 词法解析
  */
@@ -12,7 +12,7 @@
 #include <cmath>
 #include <common/logger.hpp>
 #include <sql/parser/lex.hpp>
-#include <sql/parser/parser_define.hpp>
+#include <sql/parser/sql_dfs.hpp>
 #include <boost/noncopyable.hpp>
 #include <variant>
 #include <vector>
@@ -493,6 +493,7 @@ RC Parser<InputType>::parse_col_attrs(std::vector<ColAttr> &col_attrs)
     ColAttr c;
     c.name_ = std::move(std::any_cast<std::string &>(lexer_.cur_val_ref()));
     if (!rc_success(parse_col_data_type(c))) {
+      LOG_DEBUG << "parse colum's datatype fail";
       return RC::SYNTAX_ERROR;
     }
     col_attrs.emplace_back(std::move(c));
