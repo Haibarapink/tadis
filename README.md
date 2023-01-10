@@ -30,12 +30,12 @@
   ...
 
 ## Usage
-### Support SQL grammers
-* Create table example:
+### SQL 
+* Create table example
 ```
 CREATE TABLE school (name varchar(200), age int);
 ```
-Tadis support these SQL datatypes: VARCHAR(size), CHAR(size), FLOAT, INT.
+Tadis supports these SQL datatypes: VARCHAR(size), CHAR(size), FLOAT, INT.
 
 * Insert example 
 ```
