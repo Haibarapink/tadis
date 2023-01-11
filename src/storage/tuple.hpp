@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-11 21:34:14
+ * @LastEditTime: 2023-01-11 21:40:23
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
@@ -27,11 +27,28 @@ public:
   std::string name_;
   TupleCellType type_ = TupleCellType::UNKNOW;
   size_t len_ = 0;  // for char
+
+  static TupleCellMeta init(std::string_view name, TupleCellType type)
+  {
+    return {std::string(name), type, 0};
+  }
+
+  static TupleCellMeta init(std::string_view name, TupleCellType type, size_t len)
+  {
+    return {std::string(name), type, len};
+  }
 };
 
 class TupleMeta {
 public:
   std::vector<TupleCellMeta> cells_;
+
+  static TupleMeta init(std::vector<TupleCellMeta> cells)
+  {
+    TupleMeta meta;
+    meta.cells_ = std::move(cells);
+    return meta;
+  }
 };
 
 class TupleCell {
