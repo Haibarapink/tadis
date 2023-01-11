@@ -36,6 +36,7 @@ ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/unit_tests/lex_test.cc)
 ADD_EXECUTABLE(log_test ${PROJECT_SOURCE_DIR}/unit_tests/log_test.cc)
 ADD_EXECUTABLE(parse_test ${PROJECT_SOURCE_DIR}/unit_tests/parse_test.cc)
 ADD_EXECUTABLE(mem_store_test ${PROJECT_SOURCE_DIR}/unit_tests/memory_storage_test.cc)
+ADD_EXECUTABLE(tuple_test ${PROJECT_SOURCE_DIR}/unit_tests/tuple_test.cc)
 # tests config
 TARGET_LINK_LIBRARIES(log_test PRIVATE
     pthread

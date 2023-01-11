@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-11 20:06:26
+ * @LastEditTime: 2023-01-11 21:34:14
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
@@ -10,10 +10,13 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <string_view>
 #include <common/utility.hpp>
 #include <memory>
 #include <storage/table.hpp>
 #include <storage/kv/storage.hpp>
+#include <string_view>
+#include <type_traits>
 
 // 字符串存放在二进制中时， 前4个byte是该字符串的长度.
 
@@ -65,6 +68,16 @@ public:
     return res;
   }
 
+  auto as_str()
+  {
+    std::string res;
+    assert(type_ == TupleCellType::CHAR || type_ == TupleCellType::VARCHAR);
+    for (auto ch : cell_record_) {
+      res.push_back(ch);
+    }
+    return res;
+  }
+
   auto record()
   {
     return cell_record_;
@@ -100,13 +113,21 @@ private:
 
 class Tuple {
 public:
+  Tuple()
+  {}
+
+  Tuple(TupleMeta *m, Bytes rec)
+  {
+    init(m, rec);
+  }
+
   void init(TupleMeta *m, Bytes rec)
   {
     meta_ptr_ = m;
     record_ = std::move(rec);
   }
 
-  TupleCell get_cell(size_t idx)
+  RC get_cell(size_t idx, TupleCell &c)
   {
     assert(meta_ptr_ != nullptr || idx < meta_ptr_->cells_.size());
     uint8_t *start{record_.data()};
@@ -122,7 +143,7 @@ public:
           start += sizeof str_len;
           cell_len = str_len;
           len = cell_len;
-          t = TupleCellType::UNKNOW;
+          t = TupleCellType::VARCHAR;
         } break;
         case TupleCellType::CHAR: {
           cell_len = cell.len_;
@@ -148,13 +169,20 @@ public:
       }
       start += cell_len;
     }
+
+    if (t == TupleCellType::UNKNOW) {
+      c = TupleCell{};
+      return RC::TUPLE_CELL_NOT_EXIST;
+    }
+
     BytesView b{start, len};
-    return TupleCell(b, t);
+    c = TupleCell(b, t);
+    return RC::SUCCESS;
   }
 
-  TupleCell get_cell(const std::string &name)
+  RC get_cell(const std::string &name, TupleCell &c)
   {
-    uint8_t *start{nullptr};
+    uint8_t *start{record_.data()};
     size_t len{0};
     TupleCellType t{TupleCellType::UNKNOW};
 
@@ -167,7 +195,7 @@ public:
           start += sizeof str_len;
           cell_len = str_len;
           len = cell_len;
-          t = TupleCellType::UNKNOW;
+          t = TupleCellType::VARCHAR;
         } break;
         case TupleCellType::CHAR: {
           cell_len = cell.len_;
@@ -190,15 +218,61 @@ public:
       }
       if (cell.name_ == name) {
         BytesView b{start, len};
-        return {b, t};
+        c = TupleCell{b, t};
+        return RC::SUCCESS;
       }
       start += cell_len;
     }
-
-    return TupleCell{};
+    c = TupleCell{};
+    return RC::TUPLE_CELL_NOT_EXIST;
   }
 
 private:
   TupleMeta *meta_ptr_ = nullptr;
   Bytes record_;
 };
+
+/**
+ *@brief 把float, long encode
+ */
+template <typename T>
+inline void encode_num(Bytes &bytes, T t)
+{
+  static_assert(
+      std::is_same<T, float>::value || std::is_same<T, long>::value, "encode2bytes only support float and long");
+  unsigned char *start = reinterpret_cast<unsigned char *>(&t);
+  for (auto i = 0; i < sizeof t; ++i) {
+    bytes.push_back(start[i]);
+  }
+}
+
+/**
+ *@brief  var-len string encode
+ */
+template <typename T>
+inline void encode_varchar(Bytes &bytes, const T &s)
+{
+  static_assert(std::is_same<T, std::string>::value || std::is_same<T, std::string_view>::value,
+      "encode2bytes only support float and long");
+  uint32_t size = s.size();
+  unsigned char *start = reinterpret_cast<unsigned char *>(&size);
+  for (auto i = 0; i < sizeof size; ++i) {
+    bytes.push_back(start[i]);
+  }
+  for (auto ch : s) {
+    bytes.push_back(ch);
+  }
+}
+
+/**
+ *@brief const-len string encode
+ */
+template <typename T>
+inline void encode_char(Bytes &bytes, const T &s)
+{
+  static_assert(std::is_same<T, std::string>::value || std::is_same<T, std::string_view>::value,
+      "encode2bytes only support float and long");
+  for (auto ch : s) {
+    bytes.push_back(ch);
+  }
+}
