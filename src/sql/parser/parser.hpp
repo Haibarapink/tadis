@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 23:27:46
+ * @LastEditTime: 2023-01-11 09:12:33
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 语法解析
  */
@@ -247,27 +247,30 @@ RC Parser<InputType>::parse_conds(std::vector<Condition> &cond_list)
   while (true) {
     Condition c;
 
+    // 先解析左边的value
     if (rc = parse_value(c.left_); rc != RC::SUCCESS) {
       return rc;
     }
 
+    // 解析符号
     auto [rc1, tk1] = lexer_.next();
     if (rc1 != RC::SUCCESS) {
       return rc1;
     }
-
     auto op = token2op(tk1);
     if (op == CondOp::UNDEFINED) {
       return RC::SYNTAX_ERROR;
     }
     c.op_ = op;
 
+    // 解析右边的value
     if (rc = parse_value(c.right_); rc != RC::SUCCESS) {
       return rc;
     }
 
     cond_list.emplace_back(std::move(c));
 
+    // 如果下一个token不是 ‘，’， 则解析完了
     auto [rc2, tk2] = lexer_.next_if(Token::COMMAS_T);
     if (rc2 != RC::SUCCESS) {
       break;
@@ -405,6 +408,7 @@ RC Parser<InputType>::parse_insert()
     }
   }
 
+  // 最后三个符号 ')' ','  ')'
   auto [rc1, tk1] = lexer_.next_if(Token::LBRACE_T);
   if (rc1 != RC::SUCCESS) {
     LOG_DEBUG << "miss lbrace";

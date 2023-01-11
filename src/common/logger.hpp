@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-05 19:39:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 23:05:59
+ * @LastEditTime: 2023-01-10 22:36:54
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 对 boost log的包装
  */
@@ -20,6 +20,7 @@
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 
+namespace tadis {
 namespace logging = boost::log;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
@@ -34,6 +35,7 @@ inline void add_file_log(const std::string &file)
 {
   logging::add_file_log(file);
 }
+}  // namespace tadis
 
 #define BOOST_LOG_WRAP(level) BOOST_LOG_TRIVIAL(level) << "[" << __FILE__ << ":" << __LINE__ << "]"
 

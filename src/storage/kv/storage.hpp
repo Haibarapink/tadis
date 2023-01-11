@@ -2,16 +2,19 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-02 19:34:49
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 23:22:57
+ * @LastEditTime: 2023-01-11 17:51:55
  * @FilePath: /tadis/src/storage/storage.hpp
  */
 #pragma once
 #include "common/rc.hpp"
 #include <boost/core/noncopyable.hpp>
+#include <boost/noncopyable.hpp>
+#include <span>
 #include <vector>
 #include <cstdint>
-#include <boost/noncopyable.hpp>
+
 using Bytes = std::vector<uint8_t>;
+using BytesView = std::span<uint8_t>;
 
 template <typename T>
 class TStorage : public boost::noncopyable {
