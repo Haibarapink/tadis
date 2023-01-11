@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-11 21:44:12
+ * @LastEditTime: 2023-01-11 21:48:25
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
@@ -65,6 +65,12 @@ public:
   TupleCell(BytesView cell_rec, TupleCellType type) : type_(type), cell_record_(cell_rec)
   {}
 
+  void init(BytesView cell_rec, TupleCellType type)
+  {
+    type_ = type;
+    cell_record_ = cell_rec;
+  }
+
   auto type() const
   {
     return type_;
@@ -93,11 +99,18 @@ public:
 
   auto as_str()
   {
-    std::string res;
     assert(type_ == TupleCellType::CHAR || type_ == TupleCellType::VARCHAR);
+    std::string res;
     for (auto ch : cell_record_) {
       res.push_back(ch);
     }
+    return res;
+  }
+
+  auto as_str_view()
+  {
+    assert(type_ == TupleCellType::CHAR || type_ == TupleCellType::VARCHAR);
+    std::string_view res{reinterpret_cast<char *>(cell_record_.data()), cell_record_.size()};
     return res;
   }
 
