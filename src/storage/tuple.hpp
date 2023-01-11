@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-11 21:40:23
+ * @LastEditTime: 2023-01-11 21:44:12
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
@@ -12,6 +12,7 @@
 #include <cstring>
 #include <string_view>
 #include <common/utility.hpp>
+#include <initializer_list>
 #include <memory>
 #include <storage/table.hpp>
 #include <storage/kv/storage.hpp>
@@ -42,6 +43,11 @@ public:
 class TupleMeta {
 public:
   std::vector<TupleCellMeta> cells_;
+
+  TupleMeta() = default;
+  ~TupleMeta() = default;
+  TupleMeta(std::initializer_list<TupleCellMeta> l) : cells_(l.begin(), l.end())
+  {}
 
   static TupleMeta init(std::vector<TupleCellMeta> cells)
   {
