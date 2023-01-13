@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-11 09:12:33
+ * @LastEditTime: 2023-01-13 18:33:37
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 语法解析
  */
@@ -138,7 +138,7 @@ RC Parser<InputType>::parse_attrs(std::vector<RelAttr> &attrs)
 
     RelAttr rel_attr;
     std::string name;
-    name = std::move(std::any_cast<std::string>(lexer_.cur_val_ref()));
+    name = std::move(lexer_.template cur_ref<std::string>());
 
     // Peek 下一个 token
     auto peek_res = lexer_.peek();
@@ -152,7 +152,7 @@ RC Parser<InputType>::parse_attrs(std::vector<RelAttr> &attrs)
       if (next_res.first != RC::SUCCESS) {
         return next_res.first;
       }
-      rel_attr.attribute_ = std::move(std::any_cast<std::string>(lexer_.cur_val_ref()));
+      rel_attr.attribute_ = std::move(lexer_.template cur_ref<std::string>());
     } else {
       rel_attr.attribute_ = std::move(name);
     }
@@ -178,7 +178,7 @@ RC Parser<InputType>::parse_cols(std::vector<std::string> &cols)
     if (rc != RC::SUCCESS) {
       return rc;
     }
-    cols.emplace_back(std::move(std::any_cast<std::string>(lexer_.cur_val_ref())));
+    cols.emplace_back(std::move(lexer_.template cur_ref<std::string>()));
     auto [rc1, tk1] = lexer_.next_if(Token::COMMAS_T);
     if (rc1 != RC::SUCCESS) {
       break;
@@ -220,8 +220,8 @@ RC Parser<InputType>::parse_from(std::vector<std::string> &from_list)
     if (rc1 != RC::SUCCESS) {
       return rc1;
     }
-    LOG_DEBUG << std::any_cast<std::string &>(lexer_.cur_val_ref());
-    from_list.push_back(std::move(std::any_cast<std::string &>(lexer_.cur_val_ref())));
+    LOG_DEBUG << lexer_.template cur_ref<std::string>();
+    from_list.push_back(std::move(lexer_.template cur_ref<std::string>()));
     auto [rc2, tk2] = lexer_.next_if(Token::COMMAS_T);
     if (rc2 != RC::SUCCESS) {
       break;
@@ -291,28 +291,28 @@ RC Parser<InputType>::parse_value(Value &v)
     v.value_ = RelAttr{};
     auto &&attr = v.get<RelAttr &>();
     v.type_ = AttrType::REL_ATTR;
-    attr.table_ = std::move(std::any_cast<std::string>(lexer_.cur_val_ref()));
+    attr.table_ = std::move(lexer_.template cur_ref<std::string>());
     auto [rc1, tk1] = lexer_.next_if(Token::DOT_T);
     if (rc1 == RC::SUCCESS) {
       auto [rc2, tk2] = lexer_.next_if(Token::ID_T);
       if (rc2 != RC::SUCCESS) {
         return rc2;
       }
-      attr.attribute_ = std::move(std::any_cast<std::string>(lexer_.cur_val_ref()));
+      attr.attribute_ = std::move(lexer_.template cur_ref<std::string>());
     }
     LOG_DEBUG << std::any_cast<RelAttr>(v.value_).table_ << "." << std::any_cast<RelAttr>(v.value_).attribute_;
   } else {
     switch (tk) {
       case Token::FLOAT_T:
-        v.value_ = std::any_cast<float>(lexer_.cur_val_ref());
+        v.value_ = lexer_.template cur_ref<float>();
         v.type_ = AttrType::FLOATS;
         break;
       case Token::INTEGER_T:
-        v.value_ = std::any_cast<long>(lexer_.cur_val_ref());
+        v.value_ = lexer_.template cur_ref<long>();
         v.type_ = AttrType::INTS;
         break;
       case Token::STRING_T:
-        v.value_ = std::move(lexer_.cur_val_ref());
+        v.value_ = std::move(lexer_.cur_any_ref());
         v.type_ = AttrType::STRING;
         break;
       case Token::NULL_T:
@@ -378,7 +378,7 @@ RC Parser<InputType>::parse_insert()
     return RC::SYNTAX_ERROR;
   }
 
-  insert.table_name_ = std::move(std::any_cast<std::string>(lexer_.cur_val_ref()));
+  insert.table_name_ = std::move(lexer_.template cur_ref<std::string>());
   auto [rc, tk] = lexer_.next();
   if (rc != RC::SUCCESS) {
     return rc;
@@ -465,7 +465,7 @@ RC Parser<InputType>::parse_create_table()
     LOG_DEBUG << "miss table's name";
     return RC::SYNTAX_ERROR;
   }
-  create_table.table_name_ = std::move(std::any_cast<std::string &>(lexer_.cur_val_ref()));
+  create_table.table_name_ = std::move(lexer_.template cur_ref<std::string>());
   if (!rc_success(lexer_.next_if(Token::LBRACE_T).first)) {
     LOG_DEBUG << "miss '('";
     return RC::SYNTAX_ERROR;
@@ -495,7 +495,7 @@ RC Parser<InputType>::parse_col_attrs(std::vector<ColAttr> &col_attrs)
       return RC::SYNTAX_ERROR;
     }
     ColAttr c;
-    c.name_ = std::move(std::any_cast<std::string &>(lexer_.cur_val_ref()));
+    c.name_ = std::move(lexer_.template cur_ref<std::string>());
     if (!rc_success(parse_col_data_type(c))) {
       LOG_DEBUG << "parse colum's datatype fail";
       return RC::SYNTAX_ERROR;
@@ -534,7 +534,7 @@ RC Parser<InputType>::parse_col_data_type(ColAttr &c)
         LOG_DEBUG << "miss text attribute's size";
         return RC::SYNTAX_ERROR;
       }
-      c.size_ = static_cast<size_t>(std::any_cast<long>(lexer_.cur_val_ref()));
+      c.size_ = static_cast<size_t>(lexer_.template cur_ref<long>());
       if (!rc_success(lexer_.next_if(Token::RBRACE_T).first)) {
         LOG_DEBUG << "miss ')'";
         return RC::SYNTAX_ERROR;

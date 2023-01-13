@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-11 21:48:25
+ * @LastEditTime: 2023-01-13 12:51:08
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
@@ -14,7 +14,6 @@
 #include <common/utility.hpp>
 #include <initializer_list>
 #include <memory>
-#include <storage/table.hpp>
 #include <storage/kv/storage.hpp>
 #include <string_view>
 #include <type_traits>

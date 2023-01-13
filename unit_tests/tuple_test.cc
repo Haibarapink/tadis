@@ -76,6 +76,11 @@ void basic_test2()
   BOOST_TEST(c.as_str() == "world");
 }
 
+void basic_test3()
+{
+  // TODO float
+}
+
 int main(int, char *[])
 {
   basic_test();

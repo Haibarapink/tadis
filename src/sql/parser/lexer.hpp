@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-05 19:39:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 13:37:50
+ * @LastEditTime: 2023-01-13 18:34:54
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 词法分析
  */
@@ -124,9 +124,15 @@ public:
   // peek 下一个 token，不会前进。
   LexResult<Token> peek();
 
-  std::any &cur_val_ref()
+  std::any &cur_any_ref()
   {
     return cur_val_;
+  }
+
+  template <typename T>
+  T &cur_ref()
+  {
+    return std::any_cast<T &>(cur_val_);
   }
 
   std::tuple<RC, Token, size_t> internal_next();
