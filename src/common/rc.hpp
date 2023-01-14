@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-02 19:34:49
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-11 21:26:55
+ * @LastEditTime: 2023-01-14 10:31:23
  * @FilePath: /tadis/src/common/rc.hpp
  * @Description: rc result code
  */
@@ -18,6 +18,7 @@ enum class RC {
   SYNTAX_ERROR,
   KEY_NOT_EXIST,
   TUPLE_CELL_NOT_EXIST,
+  JSON_DESERIALIZATION_ERROR,
   SUCCESS,
 };
 

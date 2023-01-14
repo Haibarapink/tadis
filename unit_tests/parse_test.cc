@@ -2,9 +2,9 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:50:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-09 13:34:18
+ * @LastEditTime: 2023-01-14 23:21:21
  * @FilePath: /tadis/src/tests/parse_test.cc
- * @Description: test
+ * @Description: 解析语法测试
  */
 #include <boost/config/workaround.hpp>
 #include <boost/core/lightweight_test.hpp>

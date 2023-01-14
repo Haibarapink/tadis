@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:29
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-13 18:22:03
+ * @LastEditTime: 2023-01-13 18:40:22
  * @FilePath: /tadis/src/storage/table.hpp
  * @Description: Table
  */
@@ -30,7 +30,6 @@ public:
   }
 
   void insert_record(BytesView rec);
-  void delete_record(BytesView rec, );
 
 private:
   std::string name_;

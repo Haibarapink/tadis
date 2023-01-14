@@ -2,10 +2,9 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-08 13:03:22
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-08 13:11:51
+ * @LastEditTime: 2023-01-14 23:21:02
  * @FilePath: /tadis/src/tests/any_test.cc
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
- * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AEint
+ * @Description: any usage example
  */
 #include <any>
 #include <boost/core/lightweight_test.hpp>

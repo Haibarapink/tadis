@@ -3,7 +3,7 @@ PROJECT(tadis)
 SET(CMAKE_CXX_STANDARD 20)
 
 # Find Boost
-FIND_PACKAGE(Boost 1.74.0)
+FIND_PACKAGE(Boost 1.75.0)
 IF (Boost_FOUND)
     INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
     MESSAGE(STATUS "Boost_INCLUDES_DIR = ${Boost_INCLUDE_DIRS}.")
@@ -37,6 +37,7 @@ ADD_EXECUTABLE(log_test ${PROJECT_SOURCE_DIR}/unit_tests/log_test.cc)
 ADD_EXECUTABLE(parse_test ${PROJECT_SOURCE_DIR}/unit_tests/parse_test.cc)
 ADD_EXECUTABLE(mem_store_test ${PROJECT_SOURCE_DIR}/unit_tests/memory_storage_test.cc)
 ADD_EXECUTABLE(tuple_test ${PROJECT_SOURCE_DIR}/unit_tests/tuple_test.cc)
+ADD_EXECUTABLE(json_test ${PROJECT_SOURCE_DIR}/unit_tests/json_test.cc)
 # tests config
 TARGET_LINK_LIBRARIES(log_test PRIVATE
     pthread
@@ -51,6 +52,21 @@ TARGET_LINK_LIBRARIES(parse_test PRIVATE
     boost_thread
     boost_log_setup
 )
+
+TARGET_LINK_LIBRARIES(tuple_test PRIVATE
+    pthread
+    boost_log
+    boost_thread
+    boost_log_setup
+)
+
+TARGET_LINK_LIBRARIES(json_test PRIVATE
+    pthread
+    boost_log
+    boost_thread
+    boost_log_setup
+)
+
 
 # unit tests
 ENABLE_TESTING()

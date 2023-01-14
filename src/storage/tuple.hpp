@@ -2,11 +2,12 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-13 12:51:08
+ * @LastEditTime: 2023-01-14 11:03:17
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
 
+#include "common/json.hpp"
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -20,7 +21,7 @@
 
 // 字符串存放在二进制中时， 前4个byte是该字符串的长度.
 
-enum class TupleCellType { UNKNOW, FLOAT, INTEGER, VARCHAR, CHAR };
+enum class TupleCellType { FLOAT = 0, INTEGER, VARCHAR, CHAR, UNKNOW };
 
 class TupleCellMeta {
 public:
@@ -37,6 +38,9 @@ public:
   {
     return {std::string(name), type, len};
   }
+
+  boost::json::value to_json();
+  RC from_json(const boost::json::value &v);
 };
 
 class TupleMeta {
@@ -54,6 +58,9 @@ public:
     meta.cells_ = std::move(cells);
     return meta;
   }
+
+  boost::json::value to_json();
+  RC from_json(const boost::json::value &v);
 };
 
 class TupleCell {
@@ -311,3 +318,5 @@ inline void encode_char(Bytes &bytes, const T &s)
     bytes.push_back(ch);
   }
 }
+
+#include "storage/serilze/tuple.ipp"

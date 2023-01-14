@@ -66,7 +66,7 @@ void test_simple_select()
     BOOST_TEST(rc == RC::SUCCESS);
     BOOST_TEST(token == Token::ID_T);
     BOOST_TEST_EQ(last_p, 6);
-    BOOST_TEST_EQ(std::any_cast<std::string>(lexer.cur_val_ref()), std::string("id"));
+    BOOST_TEST_EQ(std::any_cast<std::string>(lexer.cur_any_ref()), std::string("id"));
   }
 
   // test dot_t
@@ -80,7 +80,7 @@ void test_simple_select()
     auto [rc, token, last_p] = lexer.internal_next();
     BOOST_TEST(rc == RC::SUCCESS);
     BOOST_TEST(token == Token::ID_T);
-    BOOST_TEST(std::any_cast<std::string>(lexer.cur_val_ref()) == std::string{"name"});
+    BOOST_TEST(std::any_cast<std::string>(lexer.cur_any_ref()) == std::string{"name"});
   }
 
   for (auto i = 0; i < 5; ++i) {
@@ -91,7 +91,7 @@ void test_simple_select()
     auto [rc, token, last_p] = lexer.internal_next();
     BOOST_TEST(rc == RC::SUCCESS);
     BOOST_TEST(token == Token::ID_T);
-    BOOST_TEST(std::any_cast<std::string>(lexer.cur_val_ref()) == std::string{"id"});
+    BOOST_TEST(std::any_cast<std::string>(lexer.cur_any_ref()) == std::string{"id"});
   }
 
   {
@@ -104,7 +104,7 @@ void test_simple_select()
     auto [rc, token, last_p] = lexer.internal_next();
     BOOST_TEST(rc == RC::SUCCESS);
     BOOST_TEST(token == Token::INTEGER_T);
-    BOOST_TEST(std::any_cast<long>(lexer.cur_val_ref()) == 1);
+    BOOST_TEST(std::any_cast<long>(lexer.cur_any_ref()) == 1);
   }
 }
 
@@ -128,7 +128,7 @@ void test_nexts2()
   BOOST_TEST(lexer.next_if(Token::FLOAT_T).first == RC::SUCCESS);
   BOOST_TEST(lexer.next_if(Token::ASSIGN_T).first == RC::SUCCESS);
   BOOST_TEST(lexer.next_if(Token::INTEGER_T).first == RC::SUCCESS);
-  BOOST_TEST(std::any_cast<long>(lexer.cur_val_ref()) == -100);
+  BOOST_TEST(std::any_cast<long>(lexer.cur_any_ref()) == -100);
   BOOST_TEST(lexer.next_if(Token::COMMAS_T).first == RC::SUCCESS);
   BOOST_TEST(lexer.next_if(Token::NOT_EQ_T).first == RC::SUCCESS);
 }
@@ -138,11 +138,11 @@ void test_string()
   std::string s = " \'Hello\'123+\'World\'";
   Lexer<std::string> lexer{s};
   BOOST_TEST(lexer.next_if(Token::STRING_T).first == RC::SUCCESS);
-  BOOST_TEST(std::any_cast<std::string>(lexer.cur_val_ref()) == "Hello");
+  BOOST_TEST(std::any_cast<std::string>(lexer.cur_any_ref()) == "Hello");
   BOOST_TEST(lexer.next_if(Token::INTEGER_T).first == RC::SUCCESS);
   BOOST_TEST(lexer.next_if(Token::PLUS_T).first == RC::SUCCESS);
   BOOST_TEST(lexer.next_if(Token::STRING_T).first == RC::SUCCESS);
-  BOOST_TEST(std::any_cast<std::string>(lexer.cur_val_ref()) == "World");
+  BOOST_TEST(std::any_cast<std::string>(lexer.cur_any_ref()) == "World");
 }
 
 int main(int argc, char *argv[])
