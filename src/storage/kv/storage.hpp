@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-02 19:34:49
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-11 17:51:55
+ * @LastEditTime: 2023-01-15 00:23:59
  * @FilePath: /tadis/src/storage/storage.hpp
  */
 #pragma once
@@ -19,7 +19,7 @@ using BytesView = std::span<uint8_t>;
 template <typename T>
 class TStorage : public boost::noncopyable {
 public:
-  RC init(const std::string &path)
+  RC init(std::string_view path)
   {
     auto t = (T *)(this);
     return t->init(path);

@@ -2,13 +2,14 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-05 19:39:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-10 22:36:54
+ * @LastEditTime: 2023-01-15 00:24:11
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 对 boost log的包装
  */
 
 #pragma once
 
+#include <string_view>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions/filter.hpp>
 #include <boost/log/keywords/severity.hpp>
@@ -31,7 +32,7 @@ namespace keywords = boost::log::keywords;
 //   // TODO doc bug
 // }
 
-inline void add_file_log(const std::string &file)
+inline void add_file_log(std::string_view file)
 {
   logging::add_file_log(file);
 }

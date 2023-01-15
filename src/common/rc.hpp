@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-02 19:34:49
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-14 10:31:23
+ * @LastEditTime: 2023-01-15 19:46:11
  * @FilePath: /tadis/src/common/rc.hpp
  * @Description: rc result code
  */
@@ -19,6 +19,8 @@ enum class RC {
   KEY_NOT_EXIST,
   TUPLE_CELL_NOT_EXIST,
   JSON_DESERIALIZATION_ERROR,
+  OUT_OF_RANGE,
+  DB_OPEN_TABLE_ERROR,
   SUCCESS,
 };
 

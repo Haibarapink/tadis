@@ -3,7 +3,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-14 00:03:19
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-14 23:17:55
+ * @LastEditTime: 2023-01-15 10:33:56
  */
 #include "common/rc.hpp"
 #include "storage/tuple.hpp"
@@ -25,19 +25,20 @@ inline RC from_json(T &t, const boost::json::value &v)
   return t.from_json(v);
 }
 
-boost::json::value TupleCellMeta::to_json()
+inline boost::json::value TupleCellMeta::to_json()
 {
   boost::json::object obj;
   obj.emplace("name", name_);
   obj.emplace("type", static_cast<int>(type_));
   obj.emplace("len", len_);
+  obj.emplace("visible", visible_);
 
   auto v = boost::json::value(std::move(obj));
 
   return v;
 }
 
-RC TupleCellMeta::from_json(const boost::json::value &v)
+inline RC TupleCellMeta::from_json(const boost::json::value &v)
 {
   if (!v.is_object()) {
     LOG_DEBUG << "v is not a json object";
@@ -75,10 +76,17 @@ RC TupleCellMeta::from_json(const boost::json::value &v)
 
   len_ = len_v.as_uint64();
 
+  auto &&visible_v = obj.at("visible");
+  if (!visible_v.is_bool()) {
+    LOG_DEBUG << "visible_v's type isn't bool";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+  visible_ = visible_v.as_bool();
+
   return RC::SUCCESS;
 }
 
-boost::json::value TupleMeta::to_json()
+inline boost::json::value TupleMeta::to_json()
 {
   boost::json::object obj;
   boost::json::array cells;
@@ -91,7 +99,7 @@ boost::json::value TupleMeta::to_json()
   return v;
 }
 
-RC TupleMeta::from_json(const boost::json::value &v)
+inline RC TupleMeta::from_json(const boost::json::value &v)
 {
   if (!v.is_object()) {
     LOG_DEBUG << "v isn't a json object";

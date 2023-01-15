@@ -2,13 +2,13 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-09 23:08:24
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-11 18:44:03
+ * @LastEditTime: 2023-01-15 19:53:43
  * @FilePath: /tadis/src/common/unit.hpp
  */
 #pragma once
 
+#include <unordered_set>
 #include <cstdint>
-#include <sys/types.h>
 #include <vector>
 #include <string>
 #include <string_view>
@@ -31,3 +31,53 @@ inline std::string vector2string(std::vector<uint8_t> &v)
   }
   return s;
 }
+
+// Spit the input string by setting the split charactors.
+class Spliter {
+public:
+  Spliter() : p_{0}
+  {}
+  Spliter(std::string_view input) : input_(input), p_(0)
+  {}
+
+  void init(std::string_view input)
+  {
+    input_ = input;
+    p_ = 0;
+  }
+
+  /**
+   *@brief Add the charactor which splitted the input.
+   */
+  void add_split_ch(char ch)
+  {
+    split_chars_.insert(ch);
+  }
+
+  std::string_view next()
+  {
+    auto start = input_.data() + p_;
+    auto end = p_;
+    for (; end < input_.size(); ++end) {
+      char ch = input_[end];
+      if (split_chars_.count(ch) > 0) {
+        auto res = std::string_view{start, end - p_};
+        p_ = end + 1;
+        return res;
+      }
+    }
+    auto res = std::string_view{start, end - p_};
+    p_ = end;
+    return res;
+  }
+
+  bool eof()
+  {
+    return p_ >= input_.size();
+  }
+
+private:
+  std::string_view input_;
+  std::unordered_set<char> split_chars_;
+  size_t p_;
+};

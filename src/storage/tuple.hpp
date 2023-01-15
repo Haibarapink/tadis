@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-14 11:03:17
+ * @LastEditTime: 2023-01-15 00:23:47
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
@@ -28,6 +28,7 @@ public:
   std::string name_;
   TupleCellType type_ = TupleCellType::UNKNOW;
   size_t len_ = 0;  // for char
+  bool visible_ = false;
 
   static TupleCellMeta init(std::string_view name, TupleCellType type)
   {
@@ -222,7 +223,7 @@ public:
     return RC::SUCCESS;
   }
 
-  RC get_cell(const std::string &name, TupleCell &c)
+  RC get_cell(std::string_view name, TupleCell &c)
   {
     uint8_t *start{record_.data()};
     size_t len{0};
