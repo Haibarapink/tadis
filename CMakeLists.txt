@@ -39,6 +39,7 @@ ADD_EXECUTABLE(mem_store_test ${PROJECT_SOURCE_DIR}/unit_tests/memory_storage_te
 ADD_EXECUTABLE(tuple_test ${PROJECT_SOURCE_DIR}/unit_tests/tuple_test.cc)
 ADD_EXECUTABLE(json_test ${PROJECT_SOURCE_DIR}/unit_tests/json_test.cc)
 ADD_EXECUTABLE(utility_test ${PROJECT_SOURCE_DIR}/unit_tests/utility_test.cc)
+ADD_EXECUTABLE(rex_test ${PROJECT_SOURCE_DIR}/unit_tests/rex_test.cc)
 # tests config
 TARGET_LINK_LIBRARIES(log_test PRIVATE
     pthread

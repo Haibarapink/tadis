@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-09 23:08:24
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-15 19:53:43
+ * @LastEditTime: 2023-01-31 19:28:19
  * @FilePath: /tadis/src/common/unit.hpp
  */
 #pragma once
@@ -32,11 +32,34 @@ inline std::string vector2string(std::vector<uint8_t> &v)
   return s;
 }
 
+inline std::string make_meta_filename(std::string_view dir, std::string_view table_name)
+{
+  std::string res;
+  res.append(dir);
+  res.append("/");
+  res.append("table_");
+  res.append(table_name);
+  res.append("_meta.json");
+  return res;
+}
+
+inline std::string make_data_filename(std::string_view dir, std::string_view table_name)
+{
+  std::string res;
+  res.append(dir);
+  res.append("/");
+  res.append("table_");
+  res.append(table_name);
+  res.append("_data.db");
+  return res;
+}
+
 // Spit the input string by setting the split charactors.
 class Spliter {
 public:
   Spliter() : p_{0}
   {}
+
   Spliter(std::string_view input) : input_(input), p_(0)
   {}
 

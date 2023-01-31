@@ -1,84 +1,86 @@
 /*
  * @Author: pink haibarapink@gmail.com
- * @Date: 2023-01-15 11:29:49
+ * @Date: 2023-01-16 11:01:47
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-15 22:09:41
- * @FilePath: /tadis/src/storage/db.hpp
- * @Description: db 打开${base_dir}/db_${name}.json 用来管理 db 的元数据 比如保存的table的名字, index等等, table
- 数据存放在
- ${base_dir}/table_${name}_data.db, 元信息存放在 ${base_dir}/table_${name}_meta.json 中
+ * @LastEditTime: 2023-01-31 19:52:19
+ * @FilePath: /tadis/src/storage/db2.hpp
+ * @Description: Db的实现
  */
-
 #pragma once
-
-#include "common/json.hpp"
-#include "common/logger.hpp"
 #include "common/rc.hpp"
-#include "storage/io/fileop.hpp"
-#include "storage/table.hpp"
 #include "common/utility.hpp"
+#include "common/json.hpp"
+#include "storage/table.hpp"
+#include "storage/table.hpp"
+#include <boost/filesystem.hpp>
 #include <boost/filesystem/directory.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/filesystem.hpp>
-#include <string>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/proto/detail/remove_typename.hpp>
+#include <regex>
 #include <string_view>
-#include <unordered_map>
+#include <vector>
 
 template <typename StorageType>
 class Db {
 public:
-  Db(std::string_view base_dir, std::string_view db_meta) : base_dir_(base_dir), name_(db_meta)
-  {
-    init();
-  }
-
-  RC create_table(std::string_view name);
-
-  void shutdown();
+  RC init(std::string_view path);
 
 private:
-  RC init();
-  RC open_table(std::string_view table_name);
+  bool check_filename(std::string_view filename);
+  RC open_table(std::string_view filename);
 
-private:
   std::string base_dir_;
-  std::string name_;
-  std::unordered_map<std::string, Table<StorageType> *> tables_;
-  std::vector<std::string> table_names_;
-  Spliter spliter_;
+  std::unordered_map<std::string, std::unique_ptr<Table<StorageType>>> tables_;
 };
 
 template <typename StorageType>
-RC Db<StorageType>::init()
+RC Db<StorageType>::init(std::string_view path_str)
 {
-  // open all table
-  // db path
-  std::string db_path = base_dir_ + "/" + "db_" + name_ + ".json";
-  std::vector<std::string> db_tables;
-  auto db_meta_v = parse_file2json(db_path);
-  if (!db_meta_v.is_object()) {
-    return RC::DB_OPEN_TABLE_ERROR;
-  }
-  auto &&db_meta = db_meta_v.as_object();
-
-  auto tables = db_meta.at("tables");
-
-  if (!tables.is_array()) {
-    return RC::DB_OPEN_TABLE_ERROR;
-  }
-
-  auto &&tables_array = tables.as_array();
-  for (auto &&table : tables_array) {
-    if (!tables.is_string()) {
-      return RC::DB_OPEN_TABLE_ERROR;
-    }
-
-    auto &&table_name = table.as_string();
-    auto rc = open_table(std::string_view{table_name.c_str(), table_name.size()});
-    if (!rc_success(rc)) {
-      return rc;
+  using namespace boost;
+  base_dir_ = path_str;
+  boost::filesystem::path path{path_str};
+  // 便利path底下所有文件
+  for (auto &&entry : boost::filesystem::directory_iterator(path)) {
+    if (filesystem::is_regular_file(entry)        // 是一个文件
+        && check_filename(entry.path().string())  // 检查文件名
+    ) {
+      auto &&table_meta_filename = entry.path().string();
+      if (auto rc = open_table(std::string_view{table_meta_filename.data(), table_meta_filename.size()});
+          !rc_success(rc)) {
+        return rc;
+      }
     }
   }
+  return RC::SUCCESS;
+}
+
+// ${base_dir}/table_${name}_meta.json
+template <typename StorageType>
+bool Db<StorageType>::check_filename(std::string_view filename)
+{
+  std::string_view pattern = "table_\\w+_meta.json";
+  std::regex rex{pattern.data()};
+  return std::regex_match(filename.data(), rex);
+}
+
+template <typename StorageType>
+RC Db<StorageType>::open_table(std::string_view filename)
+{
+  auto json_data = parse_file2json(filename);
+  Spliter s;
+  s.add_split_ch('_');
+  s.next();  // skip 'table'
+  auto table_name = s.next();
+
+  TableMeta meta;
+  if (auto rc = meta.from_json(json_data); !rc_success(rc)) {
+    return rc;
+  }
+
+  Table<StorageType> table;
+  table.init(table_name, std::move(meta), base_dir_);
+  tables_.emplace(std::string{table_name.data(), table_name.size()}, std::move(table));
 
   return RC::SUCCESS;
 }
