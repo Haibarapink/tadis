@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-15 00:23:47
+ * @LastEditTime: 2023-02-02 16:36:44
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
@@ -20,7 +20,6 @@
 #include <type_traits>
 
 // 字符串存放在二进制中时， 前4个byte是该字符串的长度.
-
 enum class TupleCellType { FLOAT = 0, INTEGER, VARCHAR, CHAR, UNKNOW };
 
 class TupleCellMeta {
@@ -117,7 +116,7 @@ public:
   auto as_str_view()
   {
     assert(type_ == TupleCellType::CHAR || type_ == TupleCellType::VARCHAR);
-    std::string_view res{reinterpret_cast<char *>(cell_record_.data()), cell_record_.size()};
+    std::string_view res{cell_record_.data(), cell_record_.size()};
     return res;
   }
 
@@ -173,7 +172,7 @@ public:
   RC get_cell(size_t idx, TupleCell &c)
   {
     assert(meta_ptr_ != nullptr || idx < meta_ptr_->cells_.size());
-    uint8_t *start{record_.data()};
+    char *start{record_.data()};
     size_t len{0};
     TupleCellType t{TupleCellType::UNKNOW};
     for (auto i = 0; i < meta_ptr_->cells_.size(); ++i) {
@@ -225,7 +224,7 @@ public:
 
   RC get_cell(std::string_view name, TupleCell &c)
   {
-    uint8_t *start{record_.data()};
+    char *start{record_.data()};
     size_t len{0};
     TupleCellType t{TupleCellType::UNKNOW};
 
@@ -283,7 +282,7 @@ inline void encode_num(Bytes &bytes, T t)
 {
   static_assert(
       std::is_same<T, float>::value || std::is_same<T, long>::value, "encode2bytes only support float and long");
-  unsigned char *start = reinterpret_cast<unsigned char *>(&t);
+  char *start = reinterpret_cast<char *>(&t);
   for (auto i = 0; i < sizeof t; ++i) {
     bytes.push_back(start[i]);
   }
@@ -298,7 +297,7 @@ inline void encode_varchar(Bytes &bytes, const T &s)
   static_assert(std::is_same<T, std::string>::value || std::is_same<T, std::string_view>::value,
       "encode2bytes only support float and long");
   uint32_t size = s.size();
-  unsigned char *start = reinterpret_cast<unsigned char *>(&size);
+  char *start = reinterpret_cast<char *>(&size);
   for (auto i = 0; i < sizeof size; ++i) {
     bytes.push_back(start[i]);
   }

@@ -13,8 +13,8 @@
 #include <vector>
 #include <cstdint>
 
-using Bytes = std::vector<uint8_t>;
-using BytesView = std::span<uint8_t>;
+using Bytes = std::vector<char>;
+using BytesView = std::span<char>;
 
 template <typename T>
 class TStorage : public boost::noncopyable {
@@ -25,13 +25,13 @@ public:
     return t->init(path);
   }
 
-  RC get(const std::vector<uint8_t> &key, std::vector<uint8_t> &value)
+  RC get(const std::vector<char> &key, std::vector<char> &value)
   {
     auto t = (T *)(this);
     return t->get(key, value);
   }
 
-  RC remove(const std::vector<uint8_t> &key)
+  RC remove(const std::vector<char> &key)
   {
     auto t = (T *)(this);
     return t->remove(key);
@@ -52,9 +52,9 @@ public:
 
 class Storage : public boost::noncopyable {
 public:
-  virtual RC get(const std::vector<uint8_t> &key, std::vector<uint8_t> &value) = 0;
-  virtual RC set(std::vector<uint8_t> key, std::vector<uint8_t> value) = 0;
-  virtual RC remove(const std::vector<uint8_t> &key) = 0;
+  virtual RC get(const std::vector<char> &key, std::vector<char> &value) = 0;
+  virtual RC set(std::vector<char> key, std::vector<char> value) = 0;
+  virtual RC remove(const std::vector<char> &key) = 0;
   virtual RC flush() = 0;
   virtual RC close() = 0;
 };

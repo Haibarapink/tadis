@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-09 23:08:24
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-31 19:28:19
+ * @LastEditTime: 2023-02-02 16:36:06
  * @FilePath: /tadis/src/common/unit.hpp
  */
 #pragma once
@@ -14,20 +14,20 @@
 #include <string_view>
 
 template <typename StringType>
-inline std::vector<uint8_t> string2vector(const StringType &s)
+inline std::vector<char> string2vector(const StringType &s)
 {
-  std::vector<uint8_t> v;
+  std::vector<char> v;
   for (auto ch : s) {
-    v.push_back(static_cast<uint8_t>(ch));
+    v.push_back(ch);
   }
   return v;
 }
 
-inline std::string vector2string(std::vector<uint8_t> &v)
+inline std::string vector2string(std::vector<char> &v)
 {
   std::string s;
   for (auto byte : v) {
-    s.push_back(static_cast<char>(byte));
+    s.push_back(byte);
   }
   return s;
 }

@@ -12,8 +12,15 @@
 
 class CreateTableCtx {
 public:
-  // nothing
+  CreateTableCtx()
+  {}
+
+  RC init(const CreateTableAst &ast)
+  {}
+
   std::string name_;
   TupleMeta table_meta_;
   std::string base_dir_;
+
+  // table manager
 };

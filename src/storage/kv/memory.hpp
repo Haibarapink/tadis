@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-09 16:16:48
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-11 14:18:35
+ * @LastEditTime: 2023-02-02 16:37:13
  * @FilePath: /tadis/src/storage/memory.hpp
  * An in-memory storage
  */
@@ -61,7 +61,7 @@ public:
     return RC::SUCCESS;
   }
 
-  RC remove(const std::vector<uint8_t> &key)
+  RC remove(const std::vector<char> &key)
   {
     auto iter = kv_.find(key);
     if (iter == kv_.end()) {
@@ -71,7 +71,7 @@ public:
     return RC::SUCCESS;
   }
 
-  RC get(const std::vector<uint8_t> &key, std::vector<uint8_t> &value)
+  RC get(const std::vector<char> &key, std::vector<char> &value)
   {
     auto iter = kv_.find(key);
     if (iter == kv_.end()) {
@@ -81,7 +81,7 @@ public:
     return RC::SUCCESS;
   }
 
-  RC set(std::vector<uint8_t> key, std::vector<uint8_t> value)
+  RC set(std::vector<char> key, std::vector<char> value)
   {
     kv_.emplace(std::move(key), std::move(value));
     return RC::SUCCESS;
@@ -108,6 +108,6 @@ public:
   }
 
 private:
-  std::map<std::vector<uint8_t>, std::vector<uint8_t>> kv_;
+  std::map<std::vector<char>, std::vector<char>> kv_;
   std::string name_;
 };

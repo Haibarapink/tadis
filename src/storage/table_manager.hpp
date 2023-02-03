@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-16 11:01:47
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-31 19:52:19
+ * @LastEditTime: 2023-02-02 16:41:36
  * @FilePath: /tadis/src/storage/db2.hpp
  * @Description: Db的实现
  */
@@ -22,7 +22,7 @@
 #include <vector>
 
 template <typename StorageType>
-class Db {
+class TableManager {
 public:
   RC init(std::string_view path);
 
@@ -35,7 +35,7 @@ private:
 };
 
 template <typename StorageType>
-RC Db<StorageType>::init(std::string_view path_str)
+RC TableManager<StorageType>::init(std::string_view path_str)
 {
   using namespace boost;
   base_dir_ = path_str;
@@ -57,7 +57,7 @@ RC Db<StorageType>::init(std::string_view path_str)
 
 // ${base_dir}/table_${name}_meta.json
 template <typename StorageType>
-bool Db<StorageType>::check_filename(std::string_view filename)
+bool TableManager<StorageType>::check_filename(std::string_view filename)
 {
   std::string_view pattern = "table_\\w+_meta.json";
   std::regex rex{pattern.data()};
@@ -65,7 +65,7 @@ bool Db<StorageType>::check_filename(std::string_view filename)
 }
 
 template <typename StorageType>
-RC Db<StorageType>::open_table(std::string_view filename)
+RC TableManager<StorageType>::open_table(std::string_view filename)
 {
   auto json_data = parse_file2json(filename);
   Spliter s;
