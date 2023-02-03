@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 16:05:15
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-03 10:14:44
+ * @LastEditTime: 2023-02-03 14:49:18
  * @FilePath: /tadis/src/storage/io/disk.hpp
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
  * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
@@ -32,6 +32,11 @@ public:
   DiskManager(std::string_view filename) : DiskManager(filename, 1)
   {}
 
+  void set_next_page_id(PageId next_page_id)
+  {
+    next_page_id_ = next_page_id;
+  }
+
   void read_page(PageId id, char *dst);
   void write_page(PageId id, char *src);
 
@@ -55,7 +60,7 @@ private:
   PageId next_page_id_ = 1;  // default 1
 };
 
-void DiskManager::read_page(PageId id, char *dst)
+inline void DiskManager::read_page(PageId id, char *dst)
 {
   std::unique_lock<std::mutex> lock{mutex_};
   size_t file_size = filesize(std::string_view{db_filename_.data(), db_filename_.size()});
@@ -78,7 +83,7 @@ void DiskManager::read_page(PageId id, char *dst)
   }
 }
 
-void DiskManager::write_page(PageId id, char *src)
+inline void DiskManager::write_page(PageId id, char *src)
 {
   std::unique_lock<std::mutex> lock{mutex_};
   auto offset = id * PAGESIZE;
@@ -91,7 +96,7 @@ void DiskManager::write_page(PageId id, char *src)
   db_io_.flush();
 }
 
-void DiskManager::shutdown()
+inline void DiskManager::shutdown()
 {
   std::unique_lock<std::mutex> lock{mutex_};
   db_io_.close();

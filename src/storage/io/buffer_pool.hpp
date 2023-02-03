@@ -2,19 +2,21 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-03 13:11:10
+ * @LastEditTime: 2023-02-03 15:05:10
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
 #pragma once
 
 #include <array>
+#include <cassert>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <strings.h>
 #include <unordered_map>
 #include <vector>
+
 #include "common/rc.hpp"
 #include "common/bitmap.hpp"
 #include "common/logger.hpp"
@@ -25,23 +27,32 @@
 class Page;
 class BufferPool;
 
-constexpr size_t INVALID_ID = 18446744073709551615;
+constexpr size_t INVALID_ID = SIZE_MAX;
 
 // 第一个page记录元信息
 // bitmap 记录empty page
 class HeadPage {
 public:
-  size_t page_number_;
+  // 实际文件中使用的block数量,不包含被删除的 block
+  size_t page_num_ = 1;
+
+  // 实际文件中使用的block数量,包含被删除的 block
+  size_t phy_num_ = 1;
   std::vector<char> bitmap_;
 
-  void init(Page *);
+  // 返回 true则表明这个数据库文件还没初始化
+  bool init(Page *);
+
+  void serlize2page(Page *);
 
   BitMap bitmap()
-  {}
+  {
+    return BitMap{std::string_view{bitmap_.data(), bitmap_.size()}};
+  }
 
   static size_t max_page_count()
   {
-    return (PAGESIZE - sizeof(page_number_)) * 8;
+    return (PAGESIZE - sizeof(page_num_)) * 8;
   }
 };
 
@@ -94,6 +105,22 @@ private:
 
 class BufferPool {
 public:
+  BufferPool(std::string_view db_filename) : disk_(db_filename)
+  {
+    init();
+  }
+
+  void close()
+  {
+    auto page = fetch(0);
+    if (page == nullptr) {
+      return;
+    }
+    head_.serlize2page(page);
+    unpin(page->pid_, true);
+    flush_page(page->pid_);
+  }
+
   Page *fetch(PageId id)
   {
     if (auto iter = dir_.find(id); iter != dir_.end()) {
@@ -151,7 +178,7 @@ public:
     page->clear_all();
     change_correspondence(page, id, frame_id);
 
-    head_.page_number_++;
+    head_.page_num_++;
     res = page;
     res->dirty_ = true;
     res->pin_count_ = 1;
@@ -192,6 +219,11 @@ public:
       free_list_.push_front(frame_id);
 
       dir_.erase(iter);
+
+      head_.page_num_--;
+      auto head_page = fetch(0);
+      head_.serlize2page(head_page);
+      unpin(head_page->pid_, true);
     }
   }
 
@@ -204,6 +236,22 @@ public:
   }
 
 private:
+  // Init head page
+  void init()
+  {
+    // head page
+    auto page = fetch(0);
+    if (page == nullptr) {
+      LOG_WARN << "init fail!";
+      return;
+    }
+    bool is_dirty = head_.init(page);
+
+    unpin(0, is_dirty);
+
+    disk_.set_next_page_id(head_.phy_num_);
+  }
+
   bool victim(size_t &frame_id)
   {
     if (!free_list_.empty()) {
@@ -234,12 +282,43 @@ private:
   HeadPage head_;
 };
 
-void HeadPage::init(Page *page)
+inline bool HeadPage::init(Page *page)
 {
   assert(page);
   auto data = page->data();
-  memcpy(&page_number_, data, sizeof(size_t));
-  size_t bitmap_size = page_number_ > 8 ? page_number_ / 8 : 1;
-  bitmap_.resize(bitmap_size);
-  memcpy(bitmap_.data(), data + sizeof(size_t), bitmap_size);
+  memcpy(&page_num_, data, sizeof(size_t));
+  memcpy(&phy_num_, data + sizeof(size_t), sizeof(size_t));
+
+  // 刚刚初始化的文件
+  if (page_num_ == 0) {
+    page_num_ = 1;
+    phy_num_ = 1;
+    // init
+    bitmap_ = std::vector<char>(1, '\0');
+    auto bm = this->bitmap();
+    bm.set(0, true);
+    serlize2page(page);
+    return true;
+  }
+
+  size_t bitmap_size = 0;
+  if (phy_num_ > 8) {
+    bitmap_size = page_num_ / 8 + (page_num_ % 8 == 0 ? 0 : 1);
+  } else {
+    bitmap_size = 1;
+  }
+
+  bitmap_ = std::vector<char>(bitmap_size, '\0');
+  memcpy(bitmap_.data(), data + 2 * sizeof(size_t), bitmap_size);
+
+  return false;
+}
+
+inline void HeadPage::serlize2page(Page *page)
+{
+  assert(page);
+  memcpy(page->data(), reinterpret_cast<char *>(&this->page_num_), sizeof(size_t));
+  memcpy(page->data() + sizeof(size_t), reinterpret_cast<char *>(&this->phy_num_), sizeof(size_t));
+  memcpy(page->data() + 2 * sizeof(size_t), bitmap_.data(), bitmap_.size());
+  page->set_dirty(true);
 }
