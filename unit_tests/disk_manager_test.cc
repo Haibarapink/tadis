@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 16:54:47
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-02 21:40:15
+ * @LastEditTime: 2023-02-03 18:29:40
  * @FilePath: /tadis/unit_tests/disk_manager_test.cc
  * @Description: Test DiskManager
  */
@@ -28,11 +28,12 @@ void test()
   wbuffer[500] = '6';
 
   d.write_page(0, wbuffer.data());
-  d.read_page(0, rbuffer.data());
+  d.write_page(1, wbuffer.data());
+  d.read_page(1, rbuffer.data());
 
   assert(strcmp(wbuffer.data(), rbuffer.data()) == 0);
 
-  // remove("example.txt");
+  remove("example.txt");
 }
 
 int main(int, char *[])

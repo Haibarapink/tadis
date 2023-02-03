@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 16:05:15
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-03 14:49:18
+ * @LastEditTime: 2023-02-03 18:32:10
  * @FilePath: /tadis/src/storage/io/disk.hpp
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
  * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
@@ -73,12 +73,6 @@ inline void DiskManager::read_page(PageId id, char *dst)
     if (db_io_.bad()) {
       LOG_DEBUG << "io error while reading";
       return;
-    }
-
-    auto read_size = db_io_.gcount();
-    if (read_size < PAGESIZE) {
-      db_io_.clear();
-      bzero(dst + read_size, PAGESIZE - read_size);
     }
   }
 }

@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-03 15:05:10
+ * @LastEditTime: 2023-02-03 18:36:32
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
@@ -13,6 +13,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <string_view>
 #include <strings.h>
 #include <unordered_map>
 #include <vector>
@@ -96,6 +97,11 @@ public:
     dirty_ = false;
   }
 
+  PageId pid() const
+  {
+    return pid_;
+  }
+
 private:
   std::array<char, PAGESIZE> buffer_;
   PageId pid_ = INVALID_ID;
@@ -105,10 +111,18 @@ private:
 
 class BufferPool {
 public:
-  BufferPool(std::string_view db_filename) : disk_(db_filename)
+  BufferPool(std::string_view db_filename, size_t bfp_size) : disk_(db_filename), replacer_(bfp_size)
   {
+    for (size_t i = 0; i < bfp_size; ++i) {
+      pages_.emplace_back(new Page{});
+      pages_.back()->clear_all();
+      free_list_.emplace_back(i);
+    }
     init();
   }
+
+  BufferPool(std::string_view db_filename) : BufferPool(db_filename, 32)
+  {}
 
   void close()
   {
@@ -127,20 +141,23 @@ public:
       Page *res = pages_[iter->second].get();
       res->pin_count_++;
       replacer_.remove(iter->second);
+      LOG_DEBUG << "find frame " << iter->second << " in dir_";
       return res;
     }
+
     size_t frame_id = 0;
     if (!victim(frame_id)) {
       LOG_DEBUG << "victim frame fail";
       return nullptr;
     }
 
+    LOG_DEBUG << "fetch frame " << frame_id << " by function 'victim'";
     Page *page = pages_[frame_id].get();
-    page->clear_all();
     change_correspondence(page, id, frame_id);
     disk_.read_page(id, page->data());
-    replacer_.remove(frame_id);
     page->pin_count_ = 1;
+    page->pid_ = id;
+    page->dirty_ = false;
     return page;
   }
 
@@ -151,8 +168,7 @@ public:
     auto bitmap = head_.bitmap();
     PageId idx = INVALID_ID;
 
-    if (bitmap.first(false, idx)) {
-    } else {
+    if (!bitmap.first(false, idx)) {
       idx = disk_.next_page_id();
       if (idx > HeadPage::max_page_count()) {
         LOG_DEBUG << "page eof";
@@ -171,18 +187,20 @@ public:
     if (idx / 8 > head_.bitmap_.size()) {
       head_.bitmap_.push_back('\0');
     }
-
     bitmap.set(idx, true);
 
     Page *page = pages_[frame_id].get();
-    page->clear_all();
-    change_correspondence(page, id, frame_id);
+
+    change_correspondence(page, idx, frame_id);
 
     head_.page_num_++;
+    head_.phy_num_++;
     res = page;
+    id = idx;
+
+    res->pid_ = idx;
     res->dirty_ = true;
     res->pin_count_ = 1;
-    res->pid_ = idx;
 
     return res;
   }
@@ -191,7 +209,7 @@ public:
   {
     if (auto iter = dir_.find(id); iter != dir_.end()) {
       auto page = pages_[iter->second].get();
-      page->dirty_ = true;
+      page->dirty_ = is_dirty;
       page->pin_count_--;
       if (page->pin_count_ == 0) {
         replacer_.put(iter->second);
@@ -221,7 +239,13 @@ public:
       dir_.erase(iter);
 
       head_.page_num_--;
+
       auto head_page = fetch(0);
+      if (head_page == nullptr) {
+        LOG_WARN << "fetch head page fail";
+        return;
+      }
+
       head_.serlize2page(head_page);
       unpin(head_page->pid_, true);
     }
@@ -234,6 +258,8 @@ public:
       disk_.write_page(iter.first, page->data());
     }
   }
+
+  friend class BFPTester;
 
 private:
   // Init head page
@@ -257,10 +283,13 @@ private:
     if (!free_list_.empty()) {
       frame_id = free_list_.back();
       free_list_.pop_back();
+      LOG_DEBUG << "freelist victim frameid : " << frame_id;
       return true;
     }
 
-    return replacer_.victim(frame_id);
+    bool res = replacer_.victim(frame_id);
+    LOG_DEBUG << "replacer victim frameid : " << frame_id;
+    return res;
   }
 
   void change_correspondence(Page *p, PageId &pid, size_t &fid)
@@ -268,7 +297,14 @@ private:
     if (p->is_dirty()) {
       flush_page(p->pid_);
     }
+    dir_.erase(p->pid_);
+    p->clear_all();
+
+    p->pid_ = pid;
+
     dir_[pid] = fid;
+    LOG_DEBUG << "pid " << pid << "<->"
+              << "fid " << fid;
   }
 
   // 'size_t' is the frame pointer whitch point to pages_' item.
