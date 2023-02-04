@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-03 18:36:32
+ * @LastEditTime: 2023-02-03 19:12:05
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
@@ -238,6 +238,19 @@ public:
 
       dir_.erase(iter);
 
+      head_.page_num_--;
+
+      auto head_page = fetch(0);
+      if (head_page == nullptr) {
+        LOG_WARN << "fetch head page fail";
+        return;
+      }
+
+      head_.serlize2page(head_page);
+      unpin(head_page->pid_, true);
+    } else {
+      auto bitmap = head_.bitmap();
+      bitmap.set(id, false);
       head_.page_num_--;
 
       auto head_page = fetch(0);
