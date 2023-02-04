@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 16:54:47
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-03 18:29:40
+ * @LastEditTime: 2023-02-04 22:04:16
  * @FilePath: /tadis/unit_tests/disk_manager_test.cc
  * @Description: Test DiskManager
  */
@@ -33,7 +33,7 @@ void test()
 
   assert(strcmp(wbuffer.data(), rbuffer.data()) == 0);
 
-  remove("example.txt");
+  // remove("example.txt");
 }
 
 int main(int, char *[])

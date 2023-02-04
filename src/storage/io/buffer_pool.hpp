@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-03 19:12:05
+ * @LastEditTime: 2023-02-04 22:16:24
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
@@ -111,7 +111,7 @@ private:
 
 class BufferPool {
 public:
-  BufferPool(std::string_view db_filename, size_t bfp_size) : disk_(db_filename), replacer_(bfp_size)
+  BufferPool(std::string_view db_filename, size_t bfp_size) : replacer_(bfp_size), disk_(db_filename)
   {
     for (size_t i = 0; i < bfp_size; ++i) {
       pages_.emplace_back(new Page{});

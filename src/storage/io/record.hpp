@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 15:55:55
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-04 20:42:53
+ * @LastEditTime: 2023-02-04 21:20:51
  * @FilePath: /tadis/src/storage/io/record.hpp
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
  * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
@@ -32,8 +32,14 @@ public:
     memcpy(reinterpret_cast<char *>(&free_addr_start_), data, sizeof(size_t));
     memcpy(reinterpret_cast<char *>(&free_addr_end_), data + sizeof(size_t), sizeof(size_t));
     memcpy(reinterpret_cast<char *>(&rec_idx_count_), data + 2 * sizeof(size_t), sizeof(size_t));
+    if (free_addr_end_ == 0) {
+      // first time ==
+      free_addr_end_ = PAGESIZE;
+      memcpy(data + sizeof(size_t), reinterpret_cast<char *>(&free_addr_end_), sizeof(size_t));
+    }
     rec_idx_.resize(rec_idx_count_);
     memcpy(rec_idx_.data(), data + 3 * sizeof(size_t), sizeof(size_t) * rec_idx_count_);
+    page_ = p;
   }
 
   bool insert(const Record &rec, RecordId &rid);
@@ -66,12 +72,12 @@ private:
     return free_addr_end_ - free_addr_start_;
   }
 
-  size_t free_addr_start_;
-  size_t free_addr_end_;
-  size_t rec_idx_count_;
+  size_t free_addr_start_ = 0;
+  size_t free_addr_end_ = PAGESIZE;
+  size_t rec_idx_count_ = 0;
   std::vector<size_t> rec_idx_;
 
-  Page *page_;
+  Page *page_ = nullptr;
 };
 
 // On disk : |is_delete_|....|
@@ -178,7 +184,7 @@ inline bool RecordPage::insert(const Record &rec, RecordId &rid)
   if (rec.data_.size() + 1 >= remain_free_size() - sizeof(size_t)) {
     return false;
   }
-  size_t start_idx = free_addr_end_ - rec.data_.size();
+  size_t start_idx = free_addr_end_ - rec.data_.size() - 1;
   char *start = page_->data() + start_idx;
 
   // set delete mark
@@ -188,7 +194,7 @@ inline bool RecordPage::insert(const Record &rec, RecordId &rid)
   memcpy(start + 1, rec.data_.data(), rec.data_.size());
 
   rid.page_id_ = page_->pid();
-  rid.slot_id_ = rec_idx_.size() - 1;
+  rid.slot_id_ = rec_idx_.size();
 
   rec_idx_count_++;
   rec_idx_.push_back(start_idx);
