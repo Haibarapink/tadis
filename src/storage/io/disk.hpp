@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 16:05:15
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-04 22:39:15
+ * @LastEditTime: 2023-02-05 00:12:32
  * @FilePath: /tadis/src/storage/io/disk.hpp
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
  * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
@@ -20,13 +20,17 @@
 #include <fstream>
 #include <ios>
 #include <strings.h>
+#include <cstdio>
 
 class DiskManager {
 public:
   DiskManager(std::string_view filename, PageId next_start_id) : db_filename_(filename), next_page_id_(next_start_id)
   {
-    db_io_.open(filename.data(), std::ios::binary | std::ios::in | std::ios::app | std::ios::out);
-    assert(db_io_.is_open());
+    // db_io_.open(filename.data(), std::ios::binary | std::ios::in | std::ios::app | std::ios::out);
+    // assert(db_io_.is_open());
+
+    db_io_ = fopen(filename.data(), "wb+");
+    assert(db_io_);
   }
 
   DiskManager(std::string_view filename) : DiskManager(filename, 1)
@@ -55,7 +59,8 @@ public:
 private:
   std::mutex mutex_;
   std::string db_filename_;
-  std::fstream db_io_;
+
+  FILE *db_io_;
 
   PageId next_page_id_ = 1;  // default 1
 };
@@ -63,15 +68,14 @@ private:
 inline void DiskManager::read_page(PageId id, char *dst)
 {
   std::unique_lock<std::mutex> lock{mutex_};
-  assert(db_io_.is_open());
   size_t file_size = filesize(std::string_view{db_filename_.data(), db_filename_.size()});
   auto offset = id * PAGESIZE;
   if (offset > file_size) {
     LOG_DEBUG << "page is not existed";
   } else {
-    db_io_.seekp(offset);
-    db_io_.read(dst, PAGESIZE);
-    if (db_io_.bad()) {
+    fseek(db_io_, offset, SEEK_SET);
+    auto count = fread(dst, PAGESIZE, 1, db_io_);
+    if (count != 1) {
       LOG_DEBUG << "io error while reading";
       return;
     }
@@ -81,19 +85,18 @@ inline void DiskManager::read_page(PageId id, char *dst)
 inline void DiskManager::write_page(PageId id, char *src)
 {
   std::unique_lock<std::mutex> lock{mutex_};
-  assert(db_io_.is_open());
   auto offset = id * PAGESIZE;
-  db_io_.seekp(offset);
-  db_io_.write(src, PAGESIZE);
-  if (db_io_.bad()) {
+  fseek(db_io_, offset, SEEK_SET);
+  auto count = fwrite(src, PAGESIZE, 1, db_io_);
+  if (count != 1) {
     LOG_DEBUG << "io error while writing";
     return;
   }
-  db_io_.flush();
+  fflush(db_io_);
 }
 
 inline void DiskManager::shutdown()
 {
   std::unique_lock<std::mutex> lock{mutex_};
-  db_io_.close();
+  fclose(db_io_);
 }

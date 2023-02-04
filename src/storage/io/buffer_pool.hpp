@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-04 22:16:24
+ * @LastEditTime: 2023-02-04 23:28:20
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
@@ -209,7 +209,8 @@ public:
   {
     if (auto iter = dir_.find(id); iter != dir_.end()) {
       auto page = pages_[iter->second].get();
-      page->dirty_ = is_dirty;
+      bool dirty = page->is_dirty() && is_dirty;
+      page->dirty_ = dirty;
       page->pin_count_--;
       if (page->pin_count_ == 0) {
         replacer_.put(iter->second);

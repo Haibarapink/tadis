@@ -69,14 +69,16 @@ void basic_test()
   // page1 应该给 pid4用了
   assert(page1->pid() == pid4);
 
-  bp.unpin(pid2, false);
-  bp.unpin(pid3, false);
+  bp.unpin(pid2, true);
+  bp.unpin(pid3, true);
 
   auto page5 = bp.new_page(pid5);
   auto page6 = bp.new_page(pid6);
   auto page7 = bp.new_page(pid7);
 
   assert(page5 && page6 && page7);
+
+  sprintf(page7->data(), "I am page7");
 
   bp.unpin(pid5, false);
   bp.unpin(pid6, false);
@@ -95,9 +97,14 @@ void basic_test()
   std::string_view p1_view{page1->data(), hello_world.size()};
   std::string_view p4_view{page4->data(), fuck_world.size()};
 
-  // assert(p1_view == "hello world");
-  // assert(p4_view == "fuck world");
-  // remove("test.db");
+  bp.unpin(pid1, false);
+  bp.unpin(pid4, false);
+
+  page7 = bp.fetch(pid7);
+
+  assert(p1_view == "hello world");
+  assert(p4_view == "fuck world");
+  remove("test1.db");
 }
 
 int main(int, char *[])
