@@ -30,7 +30,7 @@ public:
 
 void basic_test()
 {
-  BufferPool bp{"test.db", 3};
+  BufferPool bp{"test1.db", 3};
   BFPTester t;
   t.bp_ = &bp;
 
