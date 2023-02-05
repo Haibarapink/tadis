@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 16:05:15
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-05 00:12:32
+ * @LastEditTime: 2023-02-05 12:53:02
  * @FilePath: /tadis/src/storage/io/disk.hpp
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
  * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
@@ -15,21 +15,28 @@
 #include "storage/io/iodef.hpp"
 
 #include <algorithm>
+#include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/file_status.hpp>
 #include <mutex>
 #include <cassert>
 #include <fstream>
 #include <ios>
 #include <strings.h>
 #include <cstdio>
+#include <boost/filesystem.hpp>
 
 class DiskManager {
 public:
   DiskManager(std::string_view filename, PageId next_start_id) : db_filename_(filename), next_page_id_(next_start_id)
   {
-    // db_io_.open(filename.data(), std::ios::binary | std::ios::in | std::ios::app | std::ios::out);
-    // assert(db_io_.is_open());
 
-    db_io_ = fopen(filename.data(), "wb+");
+    boost::filesystem::path file_path(db_filename_.data());
+    if (boost::filesystem::exists(file_path) && boost::filesystem::is_regular_file(file_path)) {
+      db_io_ = fopen(filename.data(), "rb+");
+    } else {
+      db_io_ = fopen(filename.data(), "wb+");
+    }
+
     assert(db_io_);
   }
 

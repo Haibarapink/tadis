@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 16:08:55
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-04 23:35:13
+ * @LastEditTime: 2023-02-05 00:40:20
  * @FilePath: /tadis/src/storage/io/iodef.hpp
  * @Description Defines
  */
@@ -13,7 +13,7 @@
 #include <sstream>
 #include <string>
 
-constexpr size_t PAGESIZE = 32;
+constexpr size_t PAGESIZE = 4096;
 
 using PageId = std::size_t;
 

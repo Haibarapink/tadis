@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 15:55:55
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-04 21:20:51
+ * @LastEditTime: 2023-02-05 01:29:50
  * @FilePath: /tadis/src/storage/io/record.hpp
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
  * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
@@ -37,8 +37,12 @@ public:
       free_addr_end_ = PAGESIZE;
       memcpy(data + sizeof(size_t), reinterpret_cast<char *>(&free_addr_end_), sizeof(size_t));
     }
-    rec_idx_.resize(rec_idx_count_);
-    memcpy(rec_idx_.data(), data + 3 * sizeof(size_t), sizeof(size_t) * rec_idx_count_);
+
+    for (size_t i = 0; i < rec_idx_count_; ++i) {
+      size_t idx{0};
+      memcpy(reinterpret_cast<char *>(&idx), data + (3 + i) * sizeof(size_t), sizeof(size_t));
+      rec_idx_.push_back(idx);
+    }
     page_ = p;
   }
 
@@ -63,7 +67,9 @@ public:
     memcpy(data, reinterpret_cast<char *>(&free_addr_start_), sizeof(size_t));
     memcpy(data + sizeof(size_t), reinterpret_cast<char *>(&free_addr_end_), sizeof(size_t));
     memcpy(data + sizeof(size_t) * 2, reinterpret_cast<char *>(&rec_idx_count_), sizeof(size_t));
-    memcpy(data + sizeof(size_t) * 3, rec_idx_.data(), rec_idx_.size());
+    for (size_t i = 0; i < rec_idx_.size(); ++i) {
+      memcpy(data + sizeof(size_t) * (3 + i), reinterpret_cast<char *>(&rec_idx_[i]), sizeof(size_t));
+    }
   }
 
 private:
@@ -193,6 +199,9 @@ inline bool RecordPage::insert(const Record &rec, RecordId &rid)
   // copy data
   memcpy(start + 1, rec.data_.data(), rec.data_.size());
 
+  free_addr_start_++;
+  free_addr_end_ = start_idx;
+
   rid.page_id_ = page_->pid();
   rid.slot_id_ = rec_idx_.size();
 
@@ -250,7 +259,7 @@ inline bool RecordPage::get(Record &rec, const RecordId &rid)
     return false;
   }
 
-  rec.data_.resize(start_idx - end_idx - 1);
+  rec.data_.resize(end_idx - start_idx - 1);
   rec.is_deleted_ = false;
   rec.rid_ = rid;
   memcpy(rec.data_.data(), start + 1, rec.data_.size());

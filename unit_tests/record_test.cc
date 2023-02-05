@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 20:08:12
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-04 21:00:58
+ * @LastEditTime: 2023-02-05 12:55:25
  * @FilePath: /tadis/unit_tests/record_test.cc
  * @Description: record tester
  */
@@ -13,7 +13,7 @@
 #include <string_view>
 #include <cassert>
 
-void record_page_test()
+void record_page_basic_test()
 {
   BufferPool bfp{"rec_page_test.db", 3};
   std::vector<PageId> pids(16, INVALID_ID);
@@ -45,7 +45,7 @@ void record_page_test()
   assert(rec_page.insert(records[1], rids[1]));
   assert(rids[1].slot_id_ == 1);
 
-  assert(rec_page.insert(records[0], rids[2]));
+  assert(rec_page.insert(records[2], rids[2]));
   assert(rids[2].slot_id_ == 2);
 
   bfp.unpin(pids[0], true);
@@ -81,8 +81,71 @@ void record_page_test()
   remove("rec_page_test.db");
 }
 
+void record_page_reopen_test()
+{
+  BufferPool bfp{"rec_page_test.db", 3};
+  RecordPage rec_p;
+  auto p = bfp.fetch(1);
+  rec_p.init(p);
+  RecordId rid;
+  rid.page_id_ = 1;
+  rid.slot_id_ = 1;
+  RecordView rv;
+  rec_p.get(rv, rid);
+  remove("rec_page_test.db");
+}
+
+void record_page_remain_test()
+{
+  BufferPool bfp{"rec_page_test.db", 3};
+  std::vector<PageId> pids(16, INVALID_ID);
+  std::vector<Page *> pages(16, nullptr);
+  pages[0] = bfp.new_page(pids[0]);
+  std::vector<Record> records(16);
+  std::vector<Record> records2(16);
+  std::string hello_world = "hello world", fuck_world = "fuck world", nihao = "你好";
+
+  // rec1 : hello world
+  for (auto ch : hello_world)
+    records[0].data().push_back(ch);
+
+  // rec2 : fuck world
+  for (auto ch : fuck_world)
+    records[1].data().push_back(ch);
+
+  // rec3 : nihao
+  for (auto ch : nihao)
+    records[2].data().push_back(ch);
+
+  // insert test
+  RecordPage rec_page;
+  rec_page.init(pages[0]);
+
+  size_t stop_i = 0;
+  for (auto i = 0; i < 4096; ++i) {
+    RecordId rid;
+    bool ok = rec_page.insert(records[0], rid);
+    if (ok) {
+      assert(rid.slot_id_ == stop_i);
+      stop_i++;
+      // std::cout << "slot_id_ : " << rid.slot_id_ << " stop_i : " << stop_i << std::endl;
+    } else {
+      break;
+    }
+  }
+
+  std::cout << "stop_i : " << stop_i << std::endl;
+
+  bfp.unpin(pids[0], true);
+  bfp.flush_page(pids[0]);
+
+  // remove("rec_page_test.db");
+  record_page_reopen_test();
+}
+
 int main(int, char *[])
 {
-  record_page_test();
+  // record_page_basic_test();
+  record_page_remain_test();
   std::cout << "====================== record_page_test() pass ===========================" << std::endl;
 }
