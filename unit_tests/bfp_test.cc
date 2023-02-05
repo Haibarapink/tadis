@@ -25,6 +25,11 @@ public:
     return bp_->head_;
   }
 
+  auto bfp_map()
+  {
+    return bp_->head_.bitmap();
+  }
+
   BufferPool *bp_;
 };
 
@@ -104,10 +109,31 @@ void basic_test()
 
   assert(p1_view == "hello world");
   assert(p4_view == "fuck world");
+
+  bp.close();
+  BufferPool bp2{"test1.db"};
+
   remove("test1.db");
+}
+
+void reopen_test()
+{
+  std::string file = "reopen_test.db";
+  PageId pid;
+  BufferPool bfp1{std::string_view{file.data(), file.size()}};
+  bfp1.new_page(pid);
+  bfp1.unpin(pid, true);
+  bfp1.close();
+
+  BufferPool bfp2{std::string_view{file.data(), file.size()}};
+  BFPTester t{&bfp2};
+  auto bitmap = t.bfp_map();
+  std::cout << t.hd().page_num_ << std::endl;
+  std::cout << "bitmap" << bitmap.to_string();
 }
 
 int main(int, char *[])
 {
-  basic_test();
+  // basic_test();
+  reopen_test();
 }

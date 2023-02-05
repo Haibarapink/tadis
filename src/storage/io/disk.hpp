@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 16:05:15
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-05 12:53:02
+ * @LastEditTime: 2023-02-05 14:13:18
  * @FilePath: /tadis/src/storage/io/disk.hpp
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
  * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
@@ -51,7 +51,7 @@ public:
   void read_page(PageId id, char *dst);
   void write_page(PageId id, char *src);
 
-  void shutdown();
+  void close();
 
   PageId next_page_id()
   {
@@ -102,7 +102,7 @@ inline void DiskManager::write_page(PageId id, char *src)
   fflush(db_io_);
 }
 
-inline void DiskManager::shutdown()
+inline void DiskManager::close()
 {
   std::unique_lock<std::mutex> lock{mutex_};
   fclose(db_io_);

@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-05 12:06:06
+ * @LastEditTime: 2023-02-05 15:19:37
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cassert>
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -132,7 +133,8 @@ public:
     }
     head_.serlize2page(page);
     unpin(page->pid_, true);
-    flush_page(page->pid_);
+    flush_all_page();
+    disk_.close();
   }
 
   Page *fetch(PageId id)
@@ -183,10 +185,11 @@ public:
       return nullptr;
     }
 
-    // 判断是否越界
-    if (idx / 8 > head_.bitmap_.size()) {
+    while (head_.bitmap_.size() * 8 <= idx) {
       head_.bitmap_.push_back('\0');
+      bitmap = head_.bitmap();
     }
+
     bitmap.set(idx, true);
 
     Page *page = pages_[frame_id].get();
@@ -228,6 +231,12 @@ public:
 
   void delete_page(PageId id)
   {
+    if (id >= head_.phy_num_) {
+      LOG_WARN << "page " << id << " is not existed"
+               << ", head_.phy_num_ is " << head_.phy_num_;
+      return;
+    }
+
     if (auto iter = dir_.find(id); iter != dir_.end()) {
       auto page = pages_[iter->second].get();
       auto frame_id = iter->second;
@@ -269,7 +278,8 @@ public:
   {
     for (auto &&iter : dir_) {
       auto page = pages_[iter.second].get();
-      disk_.write_page(iter.first, page->data());
+      if (page->is_dirty())
+        disk_.write_page(iter.first, page->data());
     }
   }
 
