@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-05 15:19:37
+ * @LastEditTime: 2023-02-05 22:57:40
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
@@ -169,8 +169,7 @@ public:
 
     auto bitmap = head_.bitmap();
     PageId idx = INVALID_ID;
-
-    if (!bitmap.first(false, idx)) {
+    if (auto ok = bitmap.first(false, idx); !ok || (ok && idx >= disk_.cur_page_id())) {
       idx = disk_.next_page_id();
       if (idx > HeadPage::max_page_count()) {
         LOG_DEBUG << "page eof";

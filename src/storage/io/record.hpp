@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 15:55:55
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-05 01:29:50
+ * @LastEditTime: 2023-02-05 20:23:06
  * @FilePath: /tadis/src/storage/io/record.hpp
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
  * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
@@ -10,8 +10,13 @@
 #pragma once
 
 #include "common/bytes.hpp"
+#include "common/logger.hpp"
 #include "storage/io/buffer_pool.hpp"
 #include "storage/io/iodef.hpp"
+
+#include <string>
+#include <sstream>
+#include <cassert>
 #include <cstring>
 #include <math.h>
 
@@ -24,6 +29,16 @@ class RecordView;
 class RecordPage {
 public:
   friend class PageRecordScanner;
+
+  std::string to_string()
+  {
+    std::string res;
+    std::stringstream ss{res};
+    ss << "free_addr_start_ : " << free_addr_start_ << " free_addr_end_ : " << free_addr_end_ << " rec_idx_count_ "
+       << rec_idx_count_;
+
+    return res;
+  }
 
   void init(Page *p)
   {
@@ -44,6 +59,8 @@ public:
       rec_idx_.push_back(idx);
     }
     page_ = p;
+
+    LOG_DEBUG << "init " << to_string();
   }
 
   bool insert(const Record &rec, RecordId &rid);
@@ -61,7 +78,7 @@ public:
    */
   RC contain(const RecordId &rid);
 
-  void serlize2page()
+  void write_head()
   {
     auto data = page_->data();
     memcpy(data, reinterpret_cast<char *>(&free_addr_start_), sizeof(size_t));
@@ -69,10 +86,33 @@ public:
     memcpy(data + sizeof(size_t) * 2, reinterpret_cast<char *>(&rec_idx_count_), sizeof(size_t));
     for (size_t i = 0; i < rec_idx_.size(); ++i) {
       memcpy(data + sizeof(size_t) * (3 + i), reinterpret_cast<char *>(&rec_idx_[i]), sizeof(size_t));
+      if (sizeof(size_t) * (3 + i) >= rec_idx_[i]) {
+        assert(false);
+      }
     }
   }
 
+  // 插入后使用
+  void write_head(const RecordId &rid, size_t idx)
+  {
+    auto data = page_->data();
+    memcpy(data, reinterpret_cast<char *>(&free_addr_start_), sizeof(size_t));
+    memcpy(data + sizeof(size_t), reinterpret_cast<char *>(&free_addr_end_), sizeof(size_t));
+    memcpy(data + sizeof(size_t) * 2, reinterpret_cast<char *>(&rec_idx_count_), sizeof(size_t));
+
+    LOG_DEBUG << "recordIdx offset : " << sizeof(size_t) * (3 + rid.slot_id_) << " idx : " << idx;
+
+    memcpy(data + sizeof(size_t) * (3 + rid.slot_id_), reinterpret_cast<char *>(&idx), sizeof(size_t));
+  }
+
 private:
+  bool enough(size_t record_size)
+  {
+    size_t start_idx = free_addr_end_ - record_size - 1;
+    size_t offset = sizeof(size_t) * (3 + rec_idx_.size());
+    return offset + sizeof(size_t) < start_idx;
+  }
+
   size_t remain_free_size() const
   {
     return free_addr_end_ - free_addr_start_;
@@ -186,10 +226,10 @@ private:
 
 inline bool RecordPage::insert(const Record &rec, RecordId &rid)
 {
-  // 此处第一个 +1是delete的标志位， -sizeof(size_t)是增加一个idx
-  if (rec.data_.size() + 1 >= remain_free_size() - sizeof(size_t)) {
+  if (!enough(rec.data_.size())) {
     return false;
   }
+
   size_t start_idx = free_addr_end_ - rec.data_.size() - 1;
   char *start = page_->data() + start_idx;
 
@@ -208,7 +248,7 @@ inline bool RecordPage::insert(const Record &rec, RecordId &rid)
   rec_idx_count_++;
   rec_idx_.push_back(start_idx);
 
-  serlize2page();
+  write_head(rid, start_idx);
   return true;
 }
 
@@ -220,7 +260,7 @@ inline bool RecordPage::remove(const RecordId &rid)
     return false;
   }
   rec.data_.data()[0] = 1;
-  serlize2page();
+  write_head();
 
   // TODO mark the deleted record in a map
 
