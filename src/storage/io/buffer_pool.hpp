@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-05 22:57:40
+ * @LastEditTime: 2023-02-06 00:55:34
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
@@ -33,7 +33,7 @@ constexpr size_t INVALID_ID = SIZE_MAX;
 
 // 第一个page记录元信息
 // bitmap 记录empty page
-class HeadPage {
+class BFPHeaderPage {
 public:
   // 实际文件中使用的block数量,不包含被删除的 block
   size_t page_num_ = 1;
@@ -54,7 +54,7 @@ public:
 
   static size_t max_page_count()
   {
-    return (PAGESIZE - sizeof(page_num_)) * 8;
+    return BFP_MAX_PAGE_NUM;
   }
 };
 
@@ -137,6 +137,25 @@ public:
     disk_.close();
   }
 
+  // out of range , deleted , success
+  RC contain(PageId id)
+  {
+    if (head_.bitmap_.size() * 8 <= id) {
+      return RC::OUT_OF_RANGE;
+    }
+    auto bitmap = head_.bitmap();
+    bool contain = bitmap.get(id);
+    return contain ? RC::SUCCESS : RC::PAGE_IS_DELETED;
+  }
+
+  // 从当前pid中得到下一个pid
+  bool get_next_pid(PageId current_pid, PageId &next_id)
+  {
+    auto bitmap = head_.bitmap();
+    bool contain = bitmap.first_after(true, current_pid, next_id);
+    return contain;
+  }
+
   Page *fetch(PageId id)
   {
     if (auto iter = dir_.find(id); iter != dir_.end()) {
@@ -171,7 +190,7 @@ public:
     PageId idx = INVALID_ID;
     if (auto ok = bitmap.first(false, idx); !ok || (ok && idx >= disk_.cur_page_id())) {
       idx = disk_.next_page_id();
-      if (idx > HeadPage::max_page_count()) {
+      if (idx > BFPHeaderPage::max_page_count()) {
         LOG_DEBUG << "page eof";
         return nullptr;
       }
@@ -342,10 +361,10 @@ private:
   LruReplacer<size_t> replacer_;
   DiskManager disk_;
 
-  HeadPage head_;
+  BFPHeaderPage head_;
 };
 
-inline bool HeadPage::init(Page *page)
+inline bool BFPHeaderPage::init(Page *page)
 {
   assert(page);
   auto data = page->data();
@@ -377,7 +396,7 @@ inline bool HeadPage::init(Page *page)
   return false;
 }
 
-inline void HeadPage::serlize2page(Page *page)
+inline void BFPHeaderPage::serlize2page(Page *page)
 {
   assert(page);
   memcpy(page->data(), reinterpret_cast<char *>(&this->page_num_), sizeof(size_t));

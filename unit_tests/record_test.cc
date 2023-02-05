@@ -2,14 +2,18 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 20:08:12
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-05 21:38:08
+ * @LastEditTime: 2023-02-06 00:27:31
  * @FilePath: /tadis/unit_tests/record_test.cc
  * @Description: record tester
  */
 #include "storage/io/buffer_pool.hpp"
 #include "storage/io/iodef.hpp"
 #include "storage/io/record.hpp"
+
+#include <cstdlib>
+#include <ctime>
 #include <math.h>
+#include <string>
 #include <string_view>
 #include <cassert>
 
@@ -83,7 +87,7 @@ void record_page_basic_test()
 
   BufferPool bfp2{"rec_page_test.db"};
 
-  // remove("rec_page_test.db");
+  remove("rec_page_test.db");
 }
 
 void record_page_reopen_test()
@@ -105,7 +109,7 @@ void record_page_reopen_test()
     } else {
     }
   }
-  // remove("rec_page_test.db");
+  remove("rec_page_test.db");
 }
 
 void record_page_remain_test()
@@ -162,9 +166,90 @@ void record_page_remain_test()
   record_page_reopen_test();
 }
 
+void record_remove_test(int which)
+{
+  std::string file = "record_remove.db";
+  BufferPool bfp{std::string_view{file.data(), file.size()}, 64};
+  std::vector<Page *> pages(1024, nullptr);
+  std::vector<PageId> pids(1024, 0);
+
+  // 创建一个page
+  for (auto i = 0; i < 1024; ++i) {
+    pages[i] = bfp.new_page(pids[i]);
+    // fail 则 bfp 有问题
+    assert(pages[i]);
+    bfp.unpin(pids[i], true);
+  }
+
+  auto page = bfp.fetch(which);
+  RecordPage recp;
+  recp.init(page);
+
+  std::string name = "我是真的服了，好多Bug呀，妈妈咪呀 ----- xp";
+  Record record;
+  RecordId rid;
+  record.append(name.begin(), name.end());
+  assert(recp.insert(record, rid));
+  assert(recp.contain(rid));
+  bfp.unpin(which, true);
+
+  auto page2 = bfp.fetch(which);
+  RecordPage recp2;
+  recp2.init(page2);
+  recp2.remove(rid);
+
+  assert(recp2.contain(rid) == RC::RECORD_IS_DELETED);
+  rid.slot_id_ = 1024;
+  assert(recp2.contain(rid) == RC::OUT_OF_RANGE);
+
+  bfp.close();
+  remove(file.c_str());
+}
+
+void record_page_scanner_test()
+{
+  std::string file = "scanner.db";
+  BufferPool bfp{std::string_view{file.data(), file.size()}, 64};
+  PageId pid;
+  auto page = bfp.new_page(pid);
+  auto rp = RecordPage{};
+  rp.init(page);
+
+  size_t count = 32;
+  std::vector<RecordId> rids(count);
+  std::vector<std::string> msgs;
+
+  for (auto i = 0; i < count; ++i) {
+    int tm = rand();
+    std::string tm_s = std::to_string(tm);
+    msgs.emplace_back(tm_s);
+    Record rc;
+    rc.append(tm_s.begin(), tm_s.end());
+    assert(rp.insert(rc, rids[i]));
+  }
+
+  PageRecordScanner scanner;
+  scanner.init(&rp);
+  size_t p = 0;
+
+  while (scanner.has_next()) {
+    RecordId runner_rid;
+    Record runner_rec;
+    scanner.next(runner_rec, runner_rid);
+    assert(msgs[p] == runner_rec.to_string());
+    assert(rids[p].slot_id_ == runner_rid.slot_id_);
+    p++;
+  }
+
+  remove(file.c_str());
+}
+
 int main(int, char *[])
 {
-  record_page_basic_test();
-  record_page_remain_test();
+  // record_page_basic_test();
+  // record_page_remain_test();
+  // for (auto i = 0; i < 1024; ++i)
+  //   record_remove_test(104);
+  record_page_scanner_test();
   // std::cout << "====================== record_page_test() pass ===========================" << std::endl;
 }

@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 15:55:55
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-05 20:23:06
+ * @LastEditTime: 2023-02-06 01:21:26
  * @FilePath: /tadis/src/storage/io/record.hpp
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
  * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cstring>
 #include <math.h>
+#include <vector>
 
 class Record;
 class RecordView;
@@ -51,6 +52,11 @@ public:
       // first time ==
       free_addr_end_ = PAGESIZE;
       memcpy(data + sizeof(size_t), reinterpret_cast<char *>(&free_addr_end_), sizeof(size_t));
+    }
+
+    // clean
+    if (!rec_idx_.empty()) {
+      rec_idx_ = std::vector<size_t>();
     }
 
     for (size_t i = 0; i < rec_idx_count_; ++i) {
@@ -131,6 +137,14 @@ class Record {
 public:
   friend class RecordPage;
 
+  void reset()
+  {
+    is_deleted_ = false;
+    data_ = std::vector<char>();
+    rid_.page_id_ = INVALID_ID;
+    rid_.slot_id_ = INVALID_ID;
+  }
+
   // a record
   bool is_deleted() const
   {
@@ -145,6 +159,24 @@ public:
   Bytes &data()
   {
     return data_;
+  }
+
+  template <typename IteratorType>
+  void append(IteratorType begin, IteratorType end)
+  {
+    for (; begin != end; begin++) {
+      data_.push_back(*begin);
+    }
+  }
+
+  std::string_view to_string_view()
+  {
+    return std::string_view{data_.data(), data_.size()};
+  }
+
+  std::string to_string()
+  {
+    return std::string{data_.data(), data_.size()};
   }
 
 private:
@@ -183,6 +215,8 @@ private:
 /** @brief 负责扫描一个Page的record **/
 class PageRecordScanner {
 public:
+  friend class RecordScanner;
+
   void init(RecordPage *rp)
   {
     rp_ = rp;
@@ -199,10 +233,12 @@ public:
   RC next(RecordType &rec, RecordId &rid)
   {
     while (true) {
-      auto rc = rp_->get(rec, next_rid_);
+      auto rc = rp_->contain(next_rid_);
+      rp_->get(rec, next_rid_);
       if (rc == RC::OUT_OF_RANGE) {
         return rc;
       } else if (rc == RC::SUCCESS) {
+        rid = next_rid_;
         next_rid_.slot_id_++;
         return rc;
       } else {
@@ -221,7 +257,76 @@ private:
 /** @brief 负责扫描整个table的record **/
 class RecordScanner {
 public:
+  RC init(BufferPool *bfp)
+  {
+    bfp_ = bfp;
+    RecordId rid;
+    rid.page_id_ = 1;
+    rid.slot_id_ = 0;
+    auto page = bfp_->fetch(1);
+    if (!page) {
+      return RC::INTERNAL_ERROR;
+    }
+    rp_.init(page);
+    page_scanner_.init(&rp_);
+    return RC::SUCCESS;
+  }
+
+  bool has_next()
+  {
+    bool cur_page_has_next = page_scanner_.has_next();
+    if (!cur_page_has_next) {
+      // fetch next
+      PageId next_id = INVALID_ID;
+      bool contain = bfp_->get_next_pid(page_scanner_.next_rid_.page_id_, next_id);
+      if (!contain) {
+        return false;
+      }
+
+      bfp_->unpin(page_scanner_.next_rid_.page_id_, false);
+
+      // update
+      page_scanner_.next_rid_.page_id_ = next_id;
+      page_scanner_.next_rid_.slot_id_ = 0;
+      page_scanner_.rp_ = nullptr;  // flag page is nullptr
+      // we get next page
+      auto next_page = bfp_->fetch(next_id);
+      if (next_page == nullptr) {
+        LOG_WARN << "fetch next page fail, still return true, and set page_scanner_.rp_ to nullptr";
+        return true;
+      }
+      LOG_DEBUG << "fetch next page " << page_scanner_.next_rid_.to_string();
+      rp_.init(next_page);
+      page_scanner_.rp_ = &rp_;
+      return page_scanner_.has_next();
+    }
+    return true;
+  }
+
+  template <typename RecordType>
+  RC next(RecordType &rec, RecordId &rid)
+  {
+    if (has_next()) {
+      // check page scanner
+      if (page_scanner_.rp_ == nullptr) {
+        auto next_page = bfp_->fetch(page_scanner_.next_rid_.page_id_);
+        if (next_page == nullptr) {
+          LOG_WARN << "can't fetch next page";
+          return RC::INTERNAL_ERROR;
+        }
+        rp_.init(next_page);
+        page_scanner_.rp_ = &rp_;
+      }
+
+      return page_scanner_.next(rec, rid);
+    }
+    return RC::OUT_OF_RANGE;
+  }
+
 private:
+  PageRecordScanner page_scanner_;
+  RecordPage rp_;
+  BufferPool *bfp_;
 };
 
 inline bool RecordPage::insert(const Record &rec, RecordId &rid)
@@ -254,15 +359,14 @@ inline bool RecordPage::insert(const Record &rec, RecordId &rid)
 
 inline bool RecordPage::remove(const RecordId &rid)
 {
-  // only mark delete ?
-  RecordView rec;
-  if (!get(rec, rid)) {
+  // TODO 合并?
+  // 问题: 野指针，什么时候合并.
+  if (rec_idx_.empty() || rec_idx_.size() <= rid.slot_id_) {
     return false;
   }
-  rec.data_.data()[0] = 1;
-  write_head();
-
-  // TODO mark the deleted record in a map
+  size_t start_idx = rec_idx_[rid.slot_id_];
+  char *start = page_->data() + start_idx;
+  start[0] = 1;
 
   return true;
 }

@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-02 19:34:49
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-04 20:43:44
+ * @LastEditTime: 2023-02-06 00:42:32
  * @FilePath: /tadis/src/common/rc.hpp
  * @Description: rc result code
  */
@@ -20,6 +20,7 @@ enum class RC {
   TUPLE_CELL_NOT_EXIST,
   JSON_DESERIALIZATION_ERROR,
   OUT_OF_RANGE,
+  PAGE_IS_DELETED,
   RECORD_IS_DELETED,
   DB_OPEN_TABLE_ERROR,
   SUCCESS,
@@ -37,6 +38,11 @@ static std::string_view rc2str(RC rc)
       {RC::INTERNAL_ERROR, "Success"},
       {RC::SYNTAX_ERROR, "Syntax error"},
       {RC::KEY_NOT_EXIST, "Key is not existed"},
-      {RC::TUPLE_CELL_NOT_EXIST, "Tuple cell is not existed"}};
+      {RC::TUPLE_CELL_NOT_EXIST, "Tuple cell is not existed"},
+      {RC::JSON_DESERIALIZATION_ERROR, "Json deserialization error"},
+      {RC::OUT_OF_RANGE, "Out of range"},
+      {RC::PAGE_IS_DELETED, "Page has been deleted"},
+      {RC::RECORD_IS_DELETED, "Record has been deleted"},
+      {RC::DB_OPEN_TABLE_ERROR, "Db open table error"}};
   return strs[rc];
 }

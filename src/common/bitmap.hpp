@@ -1,3 +1,11 @@
+/*
+ * @Author: pink haibarapink@gmail.com
+ * @Date: 2023-02-03 10:33:05
+ * @LastEditors: pink haibarapink@gmail.com
+ * @LastEditTime: 2023-02-06 00:51:38
+ * @FilePath: /tadis/src/common/bitmap.hpp
+ * @Description: Bitmap
+ */
 #pragma once
 
 #include <cassert>
@@ -28,6 +36,21 @@ public:
   bool first(bool bit, size_t &idx)
   {
     for (size_t i = 0; i < data_.size() * 8; ++i) {
+      if (get(i) == bit) {
+        idx = i;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // 获得第一个在cur_idx之后的和参数相同的bit的位置
+  bool first_after(bool bit, size_t cur_idx, size_t &idx)
+  {
+    if (this->data_.size() * 8 <= cur_idx) {
+      return false;
+    }
+    for (size_t i = cur_idx; i < data_.size() * 8; ++i) {
       if (get(i) == bit) {
         idx = i;
         return true;
