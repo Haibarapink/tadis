@@ -2,11 +2,18 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-06 00:55:34
+ * @LastEditTime: 2023-02-06 16:04:28
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
 #pragma once
+
+#include "common/rc.hpp"
+#include "common/bitmap.hpp"
+#include "common/logger.hpp"
+#include "storage/io/disk.hpp"
+#include "storage/io/iodef.hpp"
+#include "storage/io/replacer.hpp"
 
 #include <array>
 #include <cassert>
@@ -19,17 +26,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "common/rc.hpp"
-#include "common/bitmap.hpp"
-#include "common/logger.hpp"
-#include "storage/io/disk.hpp"
-#include "storage/io/iodef.hpp"
-#include "storage/io/replacer.hpp"
+#include <boost/core/noncopyable.hpp>
 
 class Page;
 class BufferPool;
-
-constexpr size_t INVALID_ID = SIZE_MAX;
 
 // 第一个page记录元信息
 // bitmap 记录empty page
@@ -64,6 +64,38 @@ public:
 
   Page() = default;
   ~Page() = default;
+
+  Page(const Page &p)
+  {
+    copy(p);
+  }
+
+  Page &operator=(const Page &p)
+  {
+    copy(p);
+    return *this;
+  }
+
+  Page(Page &&p)
+  {
+    copy(p);
+    p.clear_all();
+  }
+
+  Page &operator=(Page &&p)
+  {
+    copy(p);
+    p.clear_all();
+    return *this;
+  }
+
+  void copy(const Page &p)
+  {
+    memcpy(this->buffer_.data(), p.buffer_.data(), PAGESIZE);
+    this->dirty_ = p.dirty_;
+    this->pid_ = p.pid_;
+    this->pin_count_ = p.pin_count_;
+  }
 
   void set_dirty(bool is_dirty)
   {
@@ -110,7 +142,7 @@ private:
   bool dirty_ = false;
 };
 
-class BufferPool {
+class BufferPool : public boost::noncopyable {
 public:
   BufferPool(std::string_view db_filename, size_t bfp_size) : replacer_(bfp_size), disk_(db_filename)
   {
@@ -125,11 +157,17 @@ public:
   BufferPool(std::string_view db_filename) : BufferPool(db_filename, 32)
   {}
 
+  ~BufferPool()
+  {
+    close();
+  }
+
   void close()
   {
+    flush_all_page();
     auto page = fetch(0);
     if (page == nullptr) {
-      return;
+      assert(false);
     }
     head_.serlize2page(page);
     unpin(page->pid_, true);
@@ -216,6 +254,7 @@ public:
 
     head_.page_num_++;
     head_.phy_num_++;
+
     res = page;
     id = idx;
 

@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 20:08:12
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-06 00:27:31
+ * @LastEditTime: 2023-02-06 16:05:54
  * @FilePath: /tadis/unit_tests/record_test.cc
  * @Description: record tester
  */
@@ -16,6 +16,7 @@
 #include <string>
 #include <string_view>
 #include <cassert>
+#include <vector>
 
 void record_page_basic_test()
 {
@@ -244,12 +245,111 @@ void record_page_scanner_test()
   remove(file.c_str());
 }
 
+void record_page_scanner_test2()
+{
+  std::string file = "scanner.db";
+  BufferPool bfp{std::string_view{file.data(), file.size()}, 64};
+  PageId pid;
+  auto page = bfp.new_page(pid);
+  auto rp = RecordPage{};
+  rp.init(page);
+  PageRecordScanner scanner;
+  scanner.init(&rp);
+  size_t p = 0;
+
+  while (scanner.has_next()) {
+    RecordId runner_rid;
+    Record runner_rec;
+    scanner.next(runner_rec, runner_rid);
+    p++;
+  }
+
+  assert(p == 0);
+
+  remove(file.c_str());
+}
+
+std::string rand_data()
+{
+  auto data = rand();
+  return std::to_string(data);
+}
+
+void table_scanner_test()
+{
+  std::string file = "scanner.db";
+  BufferPool bfp{std::string_view{file.data(), file.size()}, 16};
+  size_t page_size = 32;
+  size_t one_page_record_size = 0;
+
+  std::vector<std::string> datas;
+  std::vector<PageId> pids;
+  std::vector<RecordId> rids;
+
+  for (size_t i = 0; i < page_size; ++i) {
+    PageId pid;
+    auto new_page = bfp.new_page(pid);
+    pids.push_back(pid);
+
+    RecordPage rcp{new_page};
+    assert(new_page->pid() == i + 1);
+    // 一直插入 直到插不进去
+    while (true) {
+      auto str = rand_data();
+      Record rec{str.begin(), str.end()};
+      RecordId rid;
+      auto ok = rcp.insert(rec, rid);
+      if (!ok)
+        break;
+      rids.push_back(rid);
+      datas.emplace_back(std::move(str));
+    }
+
+    bfp.unpin(pid, true);
+  }
+
+  RecordScanner scanner;
+  assert(scanner.init(&bfp));
+  Record record;
+  RecordId rid;
+
+  auto rid_iter = rids.begin();
+  auto datas_iter = datas.begin();
+  size_t p = 0;
+  while (scanner.has_next()) {
+    RC rc = scanner.next(record, rid);
+    assert(rc == RC::SUCCESS);
+
+    if (rids[p] != rid) {
+      assert(false);
+    }
+
+    if (record.to_string() != datas[p]) {
+      assert(false);
+    }
+
+    rid_iter++;
+    datas_iter++;
+
+    record.reset();
+    rid.page_id_ = INVALID_ID;
+    rid.slot_id_ = INVALID_ID;
+    p++;
+  }
+
+  bfp.flush_all_page();
+
+  remove(file.data());
+}
+
 int main(int, char *[])
 {
   // record_page_basic_test();
   // record_page_remain_test();
   // for (auto i = 0; i < 1024; ++i)
   //   record_remove_test(104);
-  record_page_scanner_test();
+  // record_page_scanner_test();
+  // record_page_scanner_test2();
+  table_scanner_test();
   // std::cout << "====================== record_page_test() pass ===========================" << std::endl;
 }

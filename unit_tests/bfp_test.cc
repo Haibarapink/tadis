@@ -1,5 +1,6 @@
 #include "storage/io/buffer_pool.hpp"
 #include <cassert>
+#include <cstdio>
 #include <cstring>
 #include <math.h>
 
@@ -132,8 +133,47 @@ void reopen_test()
   std::cout << "bitmap" << bitmap.to_string();
 }
 
+void reopen_test2()
+{
+  std::string_view file = "rp2.db";
+  BufferPool bfp{file, 16};
+  size_t count = 256;
+
+  for (auto i = 0; i < count; ++i) {
+    PageId id;
+    auto p = bfp.new_page(id);
+    bfp.unpin(id, true);
+  }
+  bfp.flush_all_page();
+  bfp.close();
+
+  BufferPool bfp2{std::string_view{file.data(), file.size()}};
+  BFPTester t{&bfp2};
+  assert(t.hd().phy_num_ == count + 1);
+}
+
+void many_test(size_t time)
+{
+  std::string_view file = "many.db";
+  BufferPool bfp{file, 16};
+  size_t count = 256;
+
+  for (auto i = 0; i < count; ++i) {
+    PageId id;
+    auto p = bfp.new_page(id);
+    if (id != i + 1) {
+      remove(file.data());
+      assert(false);
+    }
+    bfp.unpin(id, true);
+  }
+  bfp.flush_all_page();
+  bfp.close();
+}
+
 int main(int, char *[])
 {
   // basic_test();
-  reopen_test();
+  // reopen_test();
+  reopen_test2();
 }

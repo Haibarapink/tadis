@@ -2,17 +2,16 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 15:55:55
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-06 01:21:26
+ * @LastEditTime: 2023-02-06 13:58:18
  * @FilePath: /tadis/src/storage/io/record.hpp
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
- * https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @Description: Record RecordSpanner...
+ * Record在磁盘上如何保存，以及如何通过BufferPool扫描
  */
 #pragma once
 
 #include "common/bytes.hpp"
 #include "common/logger.hpp"
 #include "storage/io/buffer_pool.hpp"
-#include "storage/io/iodef.hpp"
 
 #include <string>
 #include <sstream>
@@ -30,6 +29,12 @@ class RecordView;
 class RecordPage {
 public:
   friend class PageRecordScanner;
+
+  RecordPage() = default;
+  RecordPage(Page *p)
+  {
+    init(p);
+  }
 
   std::string to_string()
   {
@@ -136,6 +141,13 @@ private:
 class Record {
 public:
   friend class RecordPage;
+  Record() = default;
+
+  template <typename IteratorType>
+  Record(IteratorType begin, IteratorType end)
+  {
+    append(begin, end);
+  }
 
   void reset()
   {
@@ -257,14 +269,17 @@ private:
 /** @brief 负责扫描整个table的record **/
 class RecordScanner {
 public:
+  RecordScanner() = default;
+
   RC init(BufferPool *bfp)
   {
     bfp_ = bfp;
     RecordId rid;
     rid.page_id_ = 1;
     rid.slot_id_ = 0;
+    auto rc = bfp_->contain(1);
     auto page = bfp_->fetch(1);
-    if (!page) {
+    if (!page && rc == RC::SUCCESS) {
       return RC::INTERNAL_ERROR;
     }
     rp_.init(page);

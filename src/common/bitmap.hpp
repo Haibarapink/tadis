@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-03 10:33:05
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-06 00:51:38
+ * @LastEditTime: 2023-02-06 14:47:49
  * @FilePath: /tadis/src/common/bitmap.hpp
  * @Description: Bitmap
  */
@@ -50,7 +50,7 @@ public:
     if (this->data_.size() * 8 <= cur_idx) {
       return false;
     }
-    for (size_t i = cur_idx; i < data_.size() * 8; ++i) {
+    for (size_t i = cur_idx + 1; i < data_.size() * 8; ++i) {
       if (get(i) == bit) {
         idx = i;
         return true;
