@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 16:05:15
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-05 23:06:59
+ * @LastEditTime: 2023-02-06 16:24:29
  * @FilePath: /tadis/src/storage/io/disk.hpp
  * @Description: disk
  */
@@ -102,5 +102,6 @@ inline void DiskManager::write_page(PageId id, char *src)
 inline void DiskManager::close()
 {
   std::unique_lock<std::mutex> lock{mutex_};
-  fclose(db_io_);
+  if (db_io_)
+    fclose(db_io_);
 }

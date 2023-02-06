@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 20:08:12
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-06 16:05:54
+ * @LastEditTime: 2023-02-06 16:29:18
  * @FilePath: /tadis/unit_tests/record_test.cc
  * @Description: record tester
  */
@@ -277,9 +277,9 @@ std::string rand_data()
 
 void table_scanner_test()
 {
-  std::string file = "scanner.db";
+  std::string file = "scanners.db";
   BufferPool bfp{std::string_view{file.data(), file.size()}, 16};
-  size_t page_size = 32;
+  size_t page_size = 256;
   size_t one_page_record_size = 0;
 
   std::vector<std::string> datas;

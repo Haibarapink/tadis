@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-06 16:04:28
+ * @LastEditTime: 2023-02-06 16:26:16
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
@@ -157,17 +157,11 @@ public:
   BufferPool(std::string_view db_filename) : BufferPool(db_filename, 32)
   {}
 
-  ~BufferPool()
-  {
-    close();
-  }
-
   void close()
   {
-    flush_all_page();
     auto page = fetch(0);
     if (page == nullptr) {
-      assert(false);
+      return;
     }
     head_.serlize2page(page);
     unpin(page->pid_, true);
@@ -254,7 +248,6 @@ public:
 
     head_.page_num_++;
     head_.phy_num_++;
-
     res = page;
     id = idx;
 

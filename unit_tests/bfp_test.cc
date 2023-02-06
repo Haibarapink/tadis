@@ -175,5 +175,6 @@ int main(int, char *[])
 {
   // basic_test();
   // reopen_test();
-  reopen_test2();
+  // reopen_test2();
+  many_test(0);
 }
