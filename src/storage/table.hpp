@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:29
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 13:43:25
+ * @LastEditTime: 2023-02-07 15:33:43
  * @FilePath: /tadis/src/storage/table.hpp
  * @Description: Table
  */
@@ -95,13 +95,22 @@ private:
 class Table : public boost::noncopyable {
 public:
   friend class TableManager;
+  friend class TableTester;
 
-  void init(std::string_view name, std::string_view dir, TableMeta meta)
+  void init(std::string_view dir, TableMeta meta)
   {
     dir_path_ = dir;
-    db_filename_ = make_data_filename(dir, name);
+    db_filename_ = make_data_filename(dir, meta.name_);
     bfp_ = std::unique_ptr<BufferPool>{new BufferPool{std::string_view{db_filename_.data(), db_filename_.size()}}};
   }
+
+  // TODO
+  RC insert(const std::vector<Value> &value)
+  {}
+
+  // TODO
+  RC remove()
+  {}
 
 private:
   TableMeta table_meta_;

@@ -2,11 +2,13 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 13:59:14
+ * @LastEditTime: 2023-02-07 14:35:57
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
 
+#include "common/bytes.hpp"
+#include "common/logger.hpp"
 #include "common/rc.hpp"
 #include "common/json.hpp"
 #include "common/utility.hpp"
@@ -19,6 +21,7 @@
 #include <string_view>
 #include <initializer_list>
 #include <memory>
+#include <sstream>
 #include <string_view>
 #include <type_traits>
 
@@ -32,14 +35,68 @@ public:
   size_t len_ = 0;  // for char
   bool visible_ = false;
 
+  TupleCellMeta()
+  {}
+  ~TupleCellMeta()
+  {}
+
+  TupleCellMeta(const TupleCellMeta &other)
+  {
+    copy(other);
+  }
+
+  TupleCellMeta &operator=(const TupleCellMeta &other)
+  {
+    copy(other);
+    return *this;
+  }
+
+  TupleCellMeta(TupleCellMeta &&other)
+  {
+    move_from(std::move(other));
+  }
+
+  TupleCellMeta &operator=(TupleCellMeta &&other)
+  {
+    move_from(std::move(other));
+    return *this;
+  }
+
+  void copy(const TupleCellMeta &other)
+  {
+    this->name_ = other.name_;
+    this->type_ = other.type_;
+    this->len_ = other.len_;
+    this->visible_ = other.visible_;
+  }
+
+  void move_from(TupleCellMeta &&other)
+  {
+    this->name_ = std::move(other.name_);
+    this->type_ = other.type_;
+    this->len_ = other.len_;
+    this->visible_ = other.visible_;
+    other.visible_ = false;
+    other.len_ = 0;
+    other.type_ = TupleCellType::UNKNOW;
+  }
+
   static TupleCellMeta init(std::string_view name, TupleCellType type)
   {
-    return {std::string(name), type, 0};
+    TupleCellMeta tm;
+    tm.name_ = name;
+    tm.type_ = type;
+    tm.len_ = 0;
+    return tm;
   }
 
   static TupleCellMeta init(std::string_view name, TupleCellType type, size_t len)
   {
-    return {std::string(name), type, len};
+    TupleCellMeta tm;
+    tm.name_ = name;
+    tm.type_ = type;
+    tm.len_ = len;
+    return tm;
   }
 
   boost::json::value to_json();
@@ -115,13 +172,15 @@ public:
   TupleCell(TupleCell &&other)
   {
     copy(other);
-    other = TupleCell{};
+    other.cell_record_ = BytesView{};
+    other.type_ = TupleCellType::UNKNOW;
   }
 
   TupleCell &operator=(TupleCell &&other)
   {
     copy(other);
-    other = TupleCell{};
+    other.cell_record_ = BytesView{};
+    other.type_ = TupleCellType::UNKNOW;
     return *this;
   }
 
@@ -357,6 +416,29 @@ public:
     }
     c = TupleCell{};
     return RC::TUPLE_CELL_NOT_EXIST;
+  }
+
+  std::string to_string()
+  {
+    std::string res;
+
+    if (!meta_ptr_) {
+      res.append("Empty Tuple!\n");
+      return res;
+    }
+    for (size_t i = 0; i < meta_ptr_->cells_.size(); ++i) {
+      auto &&cell_meta = meta_ptr_->cells_[i];
+      TupleCell cell;
+      auto rc = this->get_cell(i, cell);
+      // If get_cell don't return success, it should is a bug.
+      assert(rc == RC::SUCCESS);
+      res.append(cell_meta.name_);
+      res.append(" : ");
+      res.append(cell.to_string());
+      res.append("\n");
+    }
+
+    return res;
   }
 
 private:

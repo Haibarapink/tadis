@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-06 16:26:16
+ * @LastEditTime: 2023-02-07 16:22:14
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string_view>
 #include <strings.h>
+#include <unistd.h>
 #include <unordered_map>
 #include <vector>
 
@@ -45,7 +46,7 @@ public:
   // 返回 true则表明这个数据库文件还没初始化
   bool init(Page *);
 
-  void serlize2page(Page *);
+  void write2page(Page *);
 
   BitMap bitmap()
   {
@@ -144,6 +145,8 @@ private:
 
 class BufferPool : public boost::noncopyable {
 public:
+  friend class BufferPoolTester;
+
   BufferPool(std::string_view db_filename, size_t bfp_size) : replacer_(bfp_size), disk_(db_filename)
   {
     for (size_t i = 0; i < bfp_size; ++i) {
@@ -157,16 +160,29 @@ public:
   BufferPool(std::string_view db_filename) : BufferPool(db_filename, 32)
   {}
 
+  ~BufferPool()
+  {
+    if (!closed_)
+      this->close();
+  }
+
   void close()
   {
     auto page = fetch(0);
     if (page == nullptr) {
       return;
     }
-    head_.serlize2page(page);
+    head_.write2page(page);
     unpin(page->pid_, true);
     flush_all_page();
     disk_.close();
+    closed_ = true;
+  }
+
+  // useless
+  void open()
+  {
+    closed_ = false;
   }
 
   // out of range , deleted , success
@@ -306,7 +322,7 @@ public:
         return;
       }
 
-      head_.serlize2page(head_page);
+      head_.write2page(head_page);
       unpin(head_page->pid_, true);
     } else {
       auto bitmap = head_.bitmap();
@@ -319,7 +335,7 @@ public:
         return;
       }
 
-      head_.serlize2page(head_page);
+      head_.write2page(head_page);
       unpin(head_page->pid_, true);
     }
   }
@@ -332,8 +348,6 @@ public:
         disk_.write_page(iter.first, page->data());
     }
   }
-
-  friend class BFPTester;
 
 private:
   // Init head page
@@ -394,6 +408,8 @@ private:
   DiskManager disk_;
 
   BFPHeaderPage head_;
+
+  bool closed_ = false;
 };
 
 inline bool BFPHeaderPage::init(Page *page)
@@ -411,7 +427,7 @@ inline bool BFPHeaderPage::init(Page *page)
     bitmap_ = std::vector<char>(1, '\0');
     auto bm = this->bitmap();
     bm.set(0, true);
-    serlize2page(page);
+    write2page(page);
     return true;
   }
 
@@ -428,7 +444,7 @@ inline bool BFPHeaderPage::init(Page *page)
   return false;
 }
 
-inline void BFPHeaderPage::serlize2page(Page *page)
+inline void BFPHeaderPage::write2page(Page *page)
 {
   assert(page);
   memcpy(page->data(), reinterpret_cast<char *>(&this->page_num_), sizeof(size_t));

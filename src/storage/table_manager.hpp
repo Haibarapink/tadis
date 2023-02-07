@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-16 11:01:47
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 13:43:46
+ * @LastEditTime: 2023-02-07 17:06:52
  * @FilePath: /tadis/src/storage/db2.hpp
  * @Description: Db的实现
  */
@@ -17,17 +17,42 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/path_traits.hpp>
 #include <boost/proto/detail/remove_typename.hpp>
+#include <memory>
 #include <regex>
 #include <string_view>
 #include <vector>
 
 class TableManager {
 public:
+  friend class TableManagerTester;
+
   RC init(std::string_view path);
 
+  // TODO flush all metas , flush all tables (bfp destructer)
+  void close()
+  {}
+
+  // 这里contain参数不用string_view原因是 tables_查询需要类型string，则用view需要创建一个string，会有较大的开销
+  bool contain(const std::string &table_name)
+  {
+    return tables_.find(table_name) != tables_.end();
+  }
+
+  bool contain(std::string_view table_name)
+  {
+    return tables_.find(std::string{table_name.data(), table_name.size()}) != tables_.end();
+  }
+
+  RC create_table(const std::string &table_name, TableMeta meta);
+
+  // RC remove_table(std::string_view table_name);
+
 private:
-  bool check_filename(std::string_view filename);
-  RC open_table(std::string_view filename);
+  // check meta filename
+  bool check_filename(std::string_view meta_filename);
+
+  // From meta file
+  RC open_table(std::string_view meta_filename);
 
   std::string base_dir_;
   std::unordered_map<std::string, std::unique_ptr<Table>> tables_;
@@ -74,9 +99,21 @@ inline RC TableManager::open_table(std::string_view filename)
     return rc;
   }
 
-  Table table;
-  table.init(table_name, base_dir_, std::move(meta));
+  std::unique_ptr<Table> table{new Table{}};
+  table->init(base_dir_, std::move(meta));
+
   tables_.emplace(std::string{table_name.data(), table_name.size()}, std::move(table));
 
+  return RC::SUCCESS;
+}
+
+inline RC TableManager::create_table(const std::string &table_name, TableMeta meta)
+{
+  if (contain(table_name)) {
+    return RC::TABLE_ALREADY_EXISTED;
+  }
+  std::unique_ptr<Table> table{new Table{}};
+  table->init(this->base_dir_, std::move(meta));
+  tables_.emplace(std::string{table_name.data(), table_name.size()}, std::move(table));
   return RC::SUCCESS;
 }

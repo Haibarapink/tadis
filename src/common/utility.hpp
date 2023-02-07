@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-09 23:08:24
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-02 16:36:06
+ * @LastEditTime: 2023-02-07 17:18:05
  * @FilePath: /tadis/src/common/unit.hpp
  */
 #pragma once
@@ -12,6 +12,15 @@
 #include <vector>
 #include <string>
 #include <string_view>
+
+inline void to_upper(std::string &s)
+{
+  for (auto &ch : s) {
+    if (ch >= 'a' && ch <= 'z') {
+      ch = ch - 'a' + 'A';
+    }
+  }
+}
 
 template <typename StringType>
 inline std::vector<char> string2vector(const StringType &s)
@@ -35,8 +44,10 @@ inline std::string vector2string(std::vector<char> &v)
 inline std::string make_meta_filename(std::string_view dir, std::string_view table_name)
 {
   std::string res;
-  res.append(dir);
-  res.append("/");
+  if (dir.size() > 0) {
+    res.append(dir);
+    res.append("/");
+  }
   res.append("table_");
   res.append(table_name);
   res.append("_meta.json");
@@ -46,8 +57,10 @@ inline std::string make_meta_filename(std::string_view dir, std::string_view tab
 inline std::string make_data_filename(std::string_view dir, std::string_view table_name)
 {
   std::string res;
-  res.append(dir);
-  res.append("/");
+  if (!dir.empty()) {
+    res.append(dir);
+    res.append("/");
+  }
   res.append("table_");
   res.append(table_name);
   res.append("_data.db");

@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 15:55:55
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-06 13:58:18
+ * @LastEditTime: 2023-02-07 16:25:15
  * @FilePath: /tadis/src/storage/io/record.hpp
  * @Description: Record RecordSpanner...
  * Record在磁盘上如何保存，以及如何通过BufferPool扫描
@@ -28,6 +28,7 @@ class RecordView;
 //
 class RecordPage {
 public:
+  friend class RecordPageTester;
   friend class PageRecordScanner;
 
   RecordPage() = default;

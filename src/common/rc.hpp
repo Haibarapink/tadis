@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-02 19:34:49
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 14:00:47
+ * @LastEditTime: 2023-02-07 16:48:22
  * @FilePath: /tadis/src/common/rc.hpp
  * @Description: rc result code
  */
@@ -24,6 +24,7 @@ enum class RC {
   RECORD_IS_DELETED,
   DB_OPEN_TABLE_ERROR,
   UNINIT,
+  TABLE_ALREADY_EXISTED,
   SUCCESS,
 };
 
@@ -45,6 +46,7 @@ static std::string_view rc2str(RC rc)
       {RC::PAGE_IS_DELETED, "Page has been deleted"},
       {RC::RECORD_IS_DELETED, "Record has been deleted"},
       {RC::DB_OPEN_TABLE_ERROR, "Db open table error"},
-      {RC::UNINIT, "Not init"}};
+      {RC::UNINIT, "Not init"},
+      {RC::TABLE_ALREADY_EXISTED, "Table is already existed"}};
   return strs[rc];
 }

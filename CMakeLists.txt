@@ -45,6 +45,7 @@ ADD_EXECUTABLE(disk_test ${PROJECT_SOURCE_DIR}/unit_tests/disk_manager_test.cc)
 ADD_EXECUTABLE(bitmap_test ${PROJECT_SOURCE_DIR}/unit_tests/bitmap_test.cc)
 ADD_EXECUTABLE(bfp_test ${PROJECT_SOURCE_DIR}/unit_tests/bfp_test.cc)
 ADD_EXECUTABLE(record_test ${PROJECT_SOURCE_DIR}/unit_tests/record_test.cc)
+ADD_EXECUTABLE(table_test ${PROJECT_SOURCE_DIR}/unit_tests/table_test.cc)
 # tests config
 TARGET_LINK_LIBRARIES(log_test PRIVATE
     pthread
@@ -99,6 +100,13 @@ TARGET_LINK_LIBRARIES(record_test PRIVATE
     boost_filesystem
 )
 
+TARGET_LINK_LIBRARIES(table_test PRIVATE
+    pthread
+    boost_log
+    boost_thread
+    boost_log_setup
+    boost_filesystem
+)
 
 
 # unit tests

@@ -1,3 +1,11 @@
+/*
+ * @Author: pink haibarapink@gmail.com
+ * @Date: 2023-01-11 20:24:48
+ * @LastEditors: pink haibarapink@gmail.com
+ * @LastEditTime: 2023-02-07 14:36:09
+ * @FilePath: /tadis/unit_tests/tuple_test.cc
+ * @Description: 测试
+ */
 #include "common/rc.hpp"
 #include <storage/tuple.hpp>
 #include <string>
@@ -48,6 +56,7 @@ void basic_test2()
   Bytes bytes;
   encode_varchar(bytes, name);
   encode_num(bytes, num);
+
   encode_char(bytes, name2);
 
   TupleCellMeta m1 = TupleCellMeta::init("name", TupleCellType::VARCHAR);
@@ -57,6 +66,8 @@ void basic_test2()
 
   Tuple tuple;
   tuple.init(&meta, bytes);
+
+  std::cout << tuple.to_string();
 
   TupleCell c;
   BOOST_TEST(rc_success(tuple.get_cell(0, c)));
