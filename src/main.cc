@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-08 13:35:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-08 04:56:58
+ * @LastEditTime: 2023-02-08 05:02:54
  * @FilePath: /tadis/src/main.cc
  * @Description: a command line db
  */
@@ -76,6 +76,13 @@ void handle_query(std::string &query)
 
 int main(int argc, char *argv[])
 {
+  if (!std::filesystem::is_regular_file(std::filesystem::path{".tadis/tadis.log"})) {
+    FILE *f = fopen(".tadis/tadis.log", "w+");
+    fclose(f);
+  }
+
+  tadis::add_file_log(".tadis/tadis.log");
+
   mkdir(".tadis", S_IRWXU);
   std::string dir{".tadis"};
   RC rc = init_gloabl_session(std::string_view{dir.data(), dir.size()});
@@ -83,13 +90,6 @@ int main(int argc, char *argv[])
     std::cout << "init gloal session fail";
     return 1;
   }
-
-  if (!std::filesystem::is_regular_file(std::filesystem::path{".tadis/tadis.log"})) {
-    FILE *f = fopen(".tadis/tadis.log", "w+");
-    fclose(f);
-  }
-
-  tadis::add_file_log(".tadis/tadis.log");
 
   std::string line;
 
