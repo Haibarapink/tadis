@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-08 13:35:35
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-08 03:16:33
+ * @LastEditTime: 2023-02-08 04:56:58
  * @FilePath: /tadis/src/main.cc
  * @Description: a command line db
  */
@@ -13,9 +13,13 @@
 #include "session/session.hpp"
 #include "sql/parser/parser.hpp"
 #include "storage/tuple.hpp"
+#include <cstdio>
+#include <fcntl.h>
+#include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <sys/stat.h>
 
 void usage()
 {
@@ -72,18 +76,20 @@ void handle_query(std::string &query)
 
 int main(int argc, char *argv[])
 {
-  // if (argc == 0) {
-  //   usage();
-  //   return 1;
-  // }
-  std::string dir{"abc"};
+  mkdir(".tadis", S_IRWXU);
+  std::string dir{".tadis"};
   RC rc = init_gloabl_session(std::string_view{dir.data(), dir.size()});
   if (rc != RC::SUCCESS) {
     std::cout << "init gloal session fail";
     return 1;
   }
 
-  tadis::add_file_log("abc.log");
+  if (!std::filesystem::is_regular_file(std::filesystem::path{".tadis/tadis.log"})) {
+    FILE *f = fopen(".tadis/tadis.log", "w+");
+    fclose(f);
+  }
+
+  tadis::add_file_log(".tadis/tadis.log");
 
   std::string line;
 
@@ -98,4 +104,7 @@ int main(int argc, char *argv[])
 
     line.clear();
   }
+
+  auto tm = GlobalSession::global_session().table_manager();
+  tm->close();
 }

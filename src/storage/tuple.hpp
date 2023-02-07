@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-08 03:20:36
+ * @LastEditTime: 2023-02-08 04:12:20
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
@@ -99,7 +99,7 @@ public:
     return tm;
   }
 
-  boost::json::value to_json();
+  boost::json::object to_json();
   RC from_json(const boost::json::value &v);
 };
 

@@ -3,7 +3,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-14 00:03:19
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-15 10:33:56
+ * @LastEditTime: 2023-02-08 04:30:14
  */
 #include "common/rc.hpp"
 #include "storage/tuple.hpp"
@@ -14,7 +14,7 @@
 #include <cassert>
 
 template <typename T>
-inline boost::json::value to_json(T &t)
+inline boost::json::object to_json(T &t)
 {
   return t.to_json();
 }
@@ -25,7 +25,7 @@ inline RC from_json(T &t, const boost::json::value &v)
   return t.from_json(v);
 }
 
-inline boost::json::value TupleCellMeta::to_json()
+inline boost::json::object TupleCellMeta::to_json()
 {
   boost::json::object obj;
   obj.emplace("name", name_);
@@ -33,9 +33,7 @@ inline boost::json::value TupleCellMeta::to_json()
   obj.emplace("len", len_);
   obj.emplace("visible", visible_);
 
-  auto v = boost::json::value(std::move(obj));
-
-  return v;
+  return obj;
 }
 
 inline RC TupleCellMeta::from_json(const boost::json::value &v)
@@ -69,12 +67,12 @@ inline RC TupleCellMeta::from_json(const boost::json::value &v)
   type_ = static_cast<TupleCellType>(type_v.as_int64());
 
   auto &&len_v = obj.at("len");
-  if (!len_v.is_uint64()) {
+  if (!len_v.is_int64()) {
     LOG_DEBUG << "len_v's type isn't uint64";
     return RC::JSON_DESERIALIZATION_ERROR;
   }
 
-  len_ = len_v.as_uint64();
+  len_ = len_v.as_int64();
 
   auto &&visible_v = obj.at("visible");
   if (!visible_v.is_bool()) {

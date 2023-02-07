@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-14 00:00:44
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-15 12:20:22
+ * @LastEditTime: 2023-02-08 03:52:18
  * @FilePath: /tadis/src/common/json.hpp
  */
 #pragma once
@@ -13,5 +13,5 @@
 inline auto parse_file2json(std::string_view filename) -> boost::json::value
 {
   auto bytes = std_readfile(filename);
-  return boost::json::parse(filename);
+  return boost::json::parse(std::string_view{bytes.data(), bytes.size()});
 }

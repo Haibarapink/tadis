@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-09 23:08:24
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 17:18:05
+ * @LastEditTime: 2023-02-08 03:44:58
  * @FilePath: /tadis/src/common/unit.hpp
  */
 #pragma once
@@ -44,7 +44,7 @@ inline std::string vector2string(std::vector<char> &v)
 inline std::string make_meta_filename(std::string_view dir, std::string_view table_name)
 {
   std::string res;
-  if (dir.size() > 0) {
+  if (!dir.empty()) {
     res.append(dir);
     res.append("/");
   }

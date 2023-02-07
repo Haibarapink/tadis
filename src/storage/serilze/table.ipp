@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-15 10:34:42
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-15 19:23:32
+ * @LastEditTime: 2023-02-08 04:29:17
  * @FilePath: /tadis/src/storage/serilze/table.ipp
  * @Description: table's serilzation
  */
@@ -21,6 +21,7 @@ inline RC TableMeta::from_json(const boost::json::value &v)
   }
 
   auto &&obj = v.as_object();
+
   auto name_iter = obj.find("name");
   if (name_iter == obj.end()) {
     LOG_DEBUG << "can't find name_";
@@ -34,9 +35,11 @@ inline RC TableMeta::from_json(const boost::json::value &v)
 
   name_ = name_v.as_string();
 
-  auto meta_iter = obj.find("mata");
+  auto meta_iter = obj.find("meta");
+
   if (meta_iter == obj.end()) {
     LOG_DEBUG << "can't find meta_";
+    return RC::OUT_OF_RANGE;
   }
 
   auto &&meta_v = meta_iter->value();
@@ -47,10 +50,10 @@ inline RC TableMeta::from_json(const boost::json::value &v)
   return RC::SUCCESS;
 }
 
-inline boost::json::value TableMeta::to_json()
+inline boost::json::object TableMeta::to_json()
 {
   boost::json::object obj;
   obj.emplace("name", name_);
   obj.emplace("meta", meta_.to_json());
-  return boost::json::value{std::move(obj)};
+  return obj;
 }

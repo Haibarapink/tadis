@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:29
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-08 03:00:45
+ * @LastEditTime: 2023-02-08 04:11:19
  * @FilePath: /tadis/src/storage/table.hpp
  * @Description: Table
  */
@@ -17,6 +17,7 @@
 #include "storage/tuple.hpp"
 #include <any>
 #include <boost/asio/detail/descriptor_ops.hpp>
+#include <boost/json/object.hpp>
 #include <boost/json/value.hpp>
 #include <cassert>
 #include <memory>
@@ -89,7 +90,7 @@ public:
   }
 
   RC from_json(const boost::json::value &v);
-  boost::json::value to_json();
+  boost::json::object to_json();
 
 private:
   std::string name_;

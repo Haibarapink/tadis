@@ -2,13 +2,14 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-13 23:46:59
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 22:10:39
+ * @LastEditTime: 2023-02-08 03:58:34
  * @FilePath: /tadis/src/storage/io/readfile.hpp
  */
 #pragma once
 #include "common/bytes.hpp"
 
 #include <cassert>
+#include <cstdio>
 #include <fstream>
 #include <iterator>
 #include <string_view>
@@ -19,12 +20,11 @@
  */
 inline Bytes std_readfile(std::string_view filename)
 {
-  std::ifstream ifs{filename.data(), std::ios::in | std::ios::binary | std::ios::ate};
-  auto filesize = ifs.tellg();
-  ifs.seekg(0, std::ios::beg);
-  Bytes bytes;
-  ifs.read(bytes.data(), filesize);
-  ifs.close();
+  FILE *f = fopen(filename.data(), "r+");
+  auto fsize = std::filesystem::file_size(std::filesystem::path{filename});
+  Bytes bytes(fsize);
+  fread(bytes.data(), fsize, 1, f);
+  fclose(f);
   return bytes;
 }
 

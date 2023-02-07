@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-16 11:01:47
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-08 01:52:56
+ * @LastEditTime: 2023-02-08 04:51:39
  * @FilePath: /tadis/src/storage/db2.hpp
  * @Description: Db的实现
  */
@@ -11,9 +11,16 @@
 #include "common/utility.hpp"
 #include "common/json.hpp"
 #include "storage/table.hpp"
+#include "storage/io/disk.hpp"
 #include "storage/table.hpp"
 
+#include <boost/json/kind.hpp>
+#include <boost/json/serialize.hpp>
+#include <chrono>
+#include <cstdio>
 #include <filesystem>
+#include <fstream>
+#include <ios>
 #include <memory>
 #include <regex>
 #include <string_view>
@@ -27,7 +34,20 @@ public:
 
   // TODO flush all metas , flush all tables (bfp close)
   void close()
-  {}
+  {
+    for (auto &&i : tables_) {
+      auto table = i.second.get();
+      auto json = table->table_meta_.to_json();
+      auto data = boost::json::serialize(json);
+      auto filename = make_meta_filename(base_dir_, i.first);
+      FILE *f = fopen(filename.c_str(), "w+");
+      assert(f);
+      fwrite(data.data(), data.size(), 1, f);
+      fclose(f);
+
+      table->bfp_->close();
+    }
+  }
 
   // 这里contain参数不用string_view原因是 tables_查询需要类型string，则用view需要创建一个string，会有较大的开销
   bool contain(const std::string &table_name)
@@ -84,7 +104,7 @@ inline RC TableManager::init(std::string_view path_str)
 // ${base_dir}/table_${name}_meta.json
 inline bool TableManager::check_filename(std::string_view filename)
 {
-  std::string_view pattern = "table_\\w+_meta.json";
+  std::string_view pattern = ".tadis/table_\\w+_meta.json";
   std::regex rex{pattern.data()};
   return std::regex_match(filename.data(), rex);
 }
@@ -92,10 +112,11 @@ inline bool TableManager::check_filename(std::string_view filename)
 inline RC TableManager::open_table(std::string_view filename)
 {
   auto json_data = parse_file2json(filename);
-  Spliter s;
-  s.add_split_ch('_');
-  s.next();  // skip 'table'
-  auto table_name = s.next();
+
+  auto last = filename.find_last_of("_");
+  auto first = filename.find_first_of("_");
+  auto table_name = std::string_view{filename.data() + first + 1, last - first - 1};
+  std::cout << "tm " << table_name << std::endl;
 
   TableMeta meta;
   if (auto rc = meta.from_json(json_data); !rc_success(rc)) {
