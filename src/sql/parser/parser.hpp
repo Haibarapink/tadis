@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-06 16:25:58
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-04 17:56:19
+ * @LastEditTime: 2023-02-07 23:21:34
  * @FilePath: /tadis/src/sql/parser/parser.hpp
  * @Description: 语法解析
  */
@@ -220,7 +220,7 @@ RC Parser<InputType>::parse_from(std::vector<std::string> &from_list)
     if (rc1 != RC::SUCCESS) {
       return rc1;
     }
-    LOG_DEBUG << lexer_.template cur_ref<std::string>();
+    // LOG_DEBUG << lexer_.template cur_ref<std::string>();
     from_list.push_back(std::move(lexer_.template cur_ref<std::string>()));
     auto [rc2, tk2] = lexer_.next_if(Token::COMMAS_T);
     if (rc2 != RC::SUCCESS) {

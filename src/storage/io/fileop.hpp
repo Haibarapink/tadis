@@ -2,17 +2,17 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-13 23:46:59
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-02 16:35:28
+ * @LastEditTime: 2023-02-07 22:10:39
  * @FilePath: /tadis/src/storage/io/readfile.hpp
  */
 #pragma once
 #include "common/bytes.hpp"
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
+
+#include <cassert>
 #include <fstream>
 #include <iterator>
 #include <string_view>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 /**
  *@brief 一次读完全部文件
@@ -33,7 +33,7 @@ inline Bytes std_readfile(std::string_view filename)
  */
 inline size_t filesize(std::string_view filename)
 {
-  auto path = boost::filesystem::path{filename};
-  assert(boost::filesystem::is_regular_file(path));
-  return static_cast<size_t>(boost::filesystem::file_size(path));
+  auto path = std::filesystem::path{filename};
+  assert(std::filesystem::is_regular_file(path));
+  return static_cast<size_t>(std::filesystem::file_size(path));
 }

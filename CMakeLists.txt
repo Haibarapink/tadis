@@ -29,7 +29,12 @@ MESSAGE("CMAKE_CXX_FLAGS is " ${CMAKE_CXX_FLAGS})
 INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/src/" SYSTEM)
 
 ADD_EXECUTABLE(tadis ${PROJECT_SOURCE_DIR}/src/main.cc)
-
+TARGET_LINK_LIBRARIES(tadis PRIVATE
+    pthread
+    boost_log
+    boost_thread
+    boost_log_setup
+)
 
 # Tests
 ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/unit_tests/lex_test.cc)
@@ -48,10 +53,10 @@ ADD_EXECUTABLE(record_test ${PROJECT_SOURCE_DIR}/unit_tests/record_test.cc)
 ADD_EXECUTABLE(table_test ${PROJECT_SOURCE_DIR}/unit_tests/table_test.cc)
 # tests config
 TARGET_LINK_LIBRARIES(log_test PRIVATE
-    pthread
-    boost_log
-    boost_thread
-    boost_log_setup
+pthread
+boost_log
+boost_thread
+boost_log_setup
 )
 
 TARGET_LINK_LIBRARIES(parse_test PRIVATE
@@ -81,7 +86,6 @@ TARGET_LINK_LIBRARIES(disk_test PRIVATE
     boost_log
     boost_thread
     boost_log_setup
-    boost_filesystem
 )
 
 TARGET_LINK_LIBRARIES(bfp_test PRIVATE
@@ -89,7 +93,6 @@ TARGET_LINK_LIBRARIES(bfp_test PRIVATE
     boost_log
     boost_thread
     boost_log_setup
-    boost_filesystem
 )
 
 TARGET_LINK_LIBRARIES(record_test PRIVATE
@@ -97,7 +100,6 @@ TARGET_LINK_LIBRARIES(record_test PRIVATE
     boost_log
     boost_thread
     boost_log_setup
-    boost_filesystem
 )
 
 TARGET_LINK_LIBRARIES(table_test PRIVATE
@@ -105,7 +107,6 @@ TARGET_LINK_LIBRARIES(table_test PRIVATE
     boost_log
     boost_thread
     boost_log_setup
-    boost_filesystem
 )
 
 

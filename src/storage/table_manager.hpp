@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-16 11:01:47
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 17:06:52
+ * @LastEditTime: 2023-02-08 01:52:56
  * @FilePath: /tadis/src/storage/db2.hpp
  * @Description: Db的实现
  */
@@ -12,11 +12,8 @@
 #include "common/json.hpp"
 #include "storage/table.hpp"
 #include "storage/table.hpp"
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/directory.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/path_traits.hpp>
-#include <boost/proto/detail/remove_typename.hpp>
+
+#include <filesystem>
 #include <memory>
 #include <regex>
 #include <string_view>
@@ -28,7 +25,7 @@ public:
 
   RC init(std::string_view path);
 
-  // TODO flush all metas , flush all tables (bfp destructer)
+  // TODO flush all metas , flush all tables (bfp close)
   void close()
   {}
 
@@ -47,6 +44,12 @@ public:
 
   // RC remove_table(std::string_view table_name);
 
+  // make sure use contain(...) first!
+  Table *table(const std::string &name)
+  {
+    return tables_.at(name).get();
+  }
+
 private:
   // check meta filename
   bool check_filename(std::string_view meta_filename);
@@ -60,11 +63,11 @@ private:
 
 inline RC TableManager::init(std::string_view path_str)
 {
-  using namespace boost;
+  using namespace std;
   base_dir_ = path_str;
-  boost::filesystem::path path{path_str};
+  std::filesystem::path path{path_str};
   // 便利path底下所有文件
-  for (auto &&entry : boost::filesystem::directory_iterator(path)) {
+  for (auto &&entry : std::filesystem::directory_iterator(path)) {
     if (filesystem::is_regular_file(entry)        // 是一个文件
         && check_filename(entry.path().string())  // 检查文件名
     ) {

@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-04 15:55:55
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 16:25:15
+ * @LastEditTime: 2023-02-08 02:21:22
  * @FilePath: /tadis/src/storage/io/record.hpp
  * @Description: Record RecordSpanner...
  * Record在磁盘上如何保存，以及如何通过BufferPool扫描
@@ -62,7 +62,7 @@ public:
 
     // clean
     if (!rec_idx_.empty()) {
-      rec_idx_ = std::vector<size_t>();
+      rec_idx_.clear();
     }
 
     for (size_t i = 0; i < rec_idx_count_; ++i) {

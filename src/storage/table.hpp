@@ -2,19 +2,23 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:29
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 15:33:43
+ * @LastEditTime: 2023-02-08 03:00:45
  * @FilePath: /tadis/src/storage/table.hpp
  * @Description: Table
  */
 #pragma once
+#include "common/rc.hpp"
 #include "common/utility.hpp"
 #include "sql/parser/ast.hpp"
 #include "storage/io/buffer_pool.hpp"
+#include "storage/io/iodef.hpp"
+#include "storage/io/record.hpp"
 #include "storage/kv/storage.hpp"
 #include "storage/tuple.hpp"
 #include <any>
 #include <boost/asio/detail/descriptor_ops.hpp>
 #include <boost/json/value.hpp>
+#include <cassert>
 #include <memory>
 #include <string>
 #include <boost/core/noncopyable.hpp>
@@ -101,12 +105,76 @@ public:
   {
     dir_path_ = dir;
     db_filename_ = make_data_filename(dir, meta.name_);
+    table_meta_ = std::move(meta);
     bfp_ = std::unique_ptr<BufferPool>{new BufferPool{std::string_view{db_filename_.data(), db_filename_.size()}}};
   }
 
   // TODO
-  RC insert(const std::vector<Value> &value)
-  {}
+  RC insert(const std::vector<std::string> &cols, const std::vector<Value> &values)
+  {
+    auto pid = bfp_->current_pid();
+    Page *page = nullptr;
+    RC rc = RC::SUCCESS;
+    if (pid == 0) {
+      page = bfp_->new_page(pid);
+    } else {
+      page = bfp_->fetch(pid);
+    }
+
+    if (!page) {
+      return RC::FETCH_PAGE_ERROR;
+    }
+
+    rp_.init(page);
+    Record rec;
+
+    if (cols.size() == 0) {
+      rc = make_record(table_meta_.meta_, values, rec);
+      if (!rc_success(rc)) {
+        return rc;
+      }
+    } else {
+      // TODO
+      assert(false);
+    }
+
+    RecordId rid;
+    bool ok = rp_.insert(rec, rid);
+    if (!ok) {
+      page = bfp_->new_page(pid);
+      if (!page) {
+        return RC::FETCH_PAGE_ERROR;
+      }
+      rp_.init(page);
+      ok = rp_.insert(rec, rid);
+
+      if (!ok) {
+        return RC::RECORD_TOO_LARGE;
+      }
+    }
+
+    return RC::SUCCESS;
+  }
+
+  // No filter
+  std::vector<Tuple> tuples()
+  {
+    RecordScanner scanner;
+    std::vector<Tuple> tuples;
+    scanner.init(bfp_.get());
+
+    while (scanner.has_next()) {
+      Record rec;
+      RecordId rid;
+      Tuple t;
+      scanner.next(rec, rid);
+      rec.rid() = rid;
+      t.init(&table_meta_.meta_, std::move(rec.data()));
+      tuples.emplace_back(std::move(t));
+    }
+
+    return tuples;
+  }
 
   // TODO
   RC remove()
@@ -116,6 +184,7 @@ private:
   TableMeta table_meta_;
   std::string dir_path_;
   std::string db_filename_;
+  RecordPage rp_;
   std::unique_ptr<BufferPool> bfp_ = nullptr;
 };
 

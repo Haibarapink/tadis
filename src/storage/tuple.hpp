@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 14:35:57
+ * @LastEditTime: 2023-02-08 03:20:36
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
@@ -255,7 +255,7 @@ public:
       } break;
 
       default: {
-        res.append("Unknow cell type");
+        assert(false);
       } break;
     }
     return res;
@@ -318,9 +318,18 @@ public:
     record_ = std::move(rec);
   }
 
+  auto tuple_meta() -> TupleMeta *
+  {
+    return this->meta_ptr_;
+  }
+
   RC get_cell(size_t idx, TupleCell &c)
   {
-    assert(meta_ptr_ != nullptr || idx < meta_ptr_->cells_.size());
+    assert(meta_ptr_);
+    if (idx >= meta_ptr_->cells_.size()) {
+      return RC::OUT_OF_RANGE;
+    }
+
     char *start{record_.data()};
     size_t len{0};
     TupleCellType t{TupleCellType::UNKNOW};

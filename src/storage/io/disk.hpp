@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 16:05:15
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-06 16:24:29
+ * @LastEditTime: 2023-02-08 02:05:28
  * @FilePath: /tadis/src/storage/io/disk.hpp
  * @Description: disk
  */
@@ -20,15 +20,15 @@
 #include <ios>
 #include <strings.h>
 #include <cstdio>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 class DiskManager {
 public:
   DiskManager(std::string_view filename, PageId next_start_id) : db_filename_(filename), next_page_id_(next_start_id)
   {
 
-    boost::filesystem::path file_path(db_filename_.data());
-    if (boost::filesystem::exists(file_path) && boost::filesystem::is_regular_file(file_path)) {
+    std::filesystem::path file_path(db_filename_.data());
+    if (std::filesystem::exists(file_path) && std::filesystem::is_regular_file(file_path)) {
       db_io_ = fopen(filename.data(), "rb+");
     } else {
       db_io_ = fopen(filename.data(), "wb+");
@@ -57,7 +57,7 @@ public:
 
   PageId cur_page_id()
   {
-    return next_page_id_;
+    return next_page_id_ - 1;
   }
 
 private:

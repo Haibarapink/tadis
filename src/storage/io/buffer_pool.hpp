@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-02-02 12:49:27
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 16:22:14
+ * @LastEditTime: 2023-02-08 02:04:57
  * @FilePath: /tadis/src/storage/kv/bufferpool.hpp
  * @Description: buffer pool
  */
@@ -161,10 +161,7 @@ public:
   {}
 
   ~BufferPool()
-  {
-    if (!closed_)
-      this->close();
-  }
+  {}
 
   void close()
   {
@@ -183,6 +180,11 @@ public:
   void open()
   {
     closed_ = false;
+  }
+
+  PageId current_pid()
+  {
+    return disk_.cur_page_id();
   }
 
   // out of range , deleted , success

@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-02 19:34:49
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-07 16:48:22
+ * @LastEditTime: 2023-02-08 03:03:53
  * @FilePath: /tadis/src/common/rc.hpp
  * @Description: rc result code
  */
@@ -25,6 +25,9 @@ enum class RC {
   DB_OPEN_TABLE_ERROR,
   UNINIT,
   TABLE_ALREADY_EXISTED,
+  TABLE_NOT_EXISTED,
+  FETCH_PAGE_ERROR,
+  RECORD_TOO_LARGE,
   SUCCESS,
 };
 
@@ -47,6 +50,9 @@ static std::string_view rc2str(RC rc)
       {RC::RECORD_IS_DELETED, "Record has been deleted"},
       {RC::DB_OPEN_TABLE_ERROR, "Db open table error"},
       {RC::UNINIT, "Not init"},
-      {RC::TABLE_ALREADY_EXISTED, "Table is already existed"}};
+      {RC::TABLE_ALREADY_EXISTED, "Table is already existed"},
+      {RC::TABLE_NOT_EXISTED, "Table is not existed"},
+      {RC::FETCH_PAGE_ERROR, "Fetch page error"},
+      {RC::RECORD_TOO_LARGE, "Record is too large"}};
   return strs[rc];
 }
