@@ -2,20 +2,23 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:36
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-02 16:36:44
+ * @LastEditTime: 2023-02-07 13:59:14
  * @FilePath: /tadis/src/storage/tuple.hpp
  */
 #pragma once
 
+#include "common/rc.hpp"
 #include "common/json.hpp"
+#include "common/utility.hpp"
+#include "storage/io/record.hpp"
+#include "sql/parser/ast.hpp"
+
 #include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <string_view>
-#include <common/utility.hpp>
 #include <initializer_list>
 #include <memory>
-#include <storage/kv/storage.hpp>
 #include <string_view>
 #include <type_traits>
 
@@ -47,8 +50,29 @@ class TupleMeta {
 public:
   std::vector<TupleCellMeta> cells_;
 
-  TupleMeta() = default;
-  ~TupleMeta() = default;
+  TupleMeta()
+  {}
+  ~TupleMeta()
+  {}
+  TupleMeta(const TupleMeta &other)
+  {
+    cells_ = other.cells_;
+  }
+  TupleMeta &operator=(const TupleMeta &other)
+  {
+    cells_ = other.cells_;
+    return *this;
+  }
+  TupleMeta(TupleMeta &&other)
+  {
+    cells_ = std::move(other.cells_);
+  }
+  TupleMeta &operator=(TupleMeta &&other)
+  {
+    cells_ = std::move(other.cells_);
+    return *this;
+  }
+
   TupleMeta(std::initializer_list<TupleCellMeta> l) : cells_(l.begin(), l.end())
   {}
 
@@ -75,6 +99,36 @@ public:
   {
     type_ = type;
     cell_record_ = cell_rec;
+  }
+
+  TupleCell(const TupleCell &other)
+  {
+    copy(other);
+  }
+
+  TupleCell &operator=(const TupleCell &other)
+  {
+    copy(other);
+    return *this;
+  }
+
+  TupleCell(TupleCell &&other)
+  {
+    copy(other);
+    other = TupleCell{};
+  }
+
+  TupleCell &operator=(TupleCell &&other)
+  {
+    copy(other);
+    other = TupleCell{};
+    return *this;
+  }
+
+  void copy(const TupleCell &other)
+  {
+    this->cell_record_ = other.cell_record_;
+    this->type_ = other.type_;
   }
 
   auto type() const
@@ -161,6 +215,42 @@ public:
   Tuple(TupleMeta *m, Bytes rec)
   {
     init(m, rec);
+  }
+
+  Tuple(const Tuple &other)
+  {
+    copy(other);
+  }
+
+  Tuple &operator=(const Tuple &other)
+  {
+    copy(other);
+
+    return *this;
+  }
+
+  Tuple(Tuple &&other)
+  {
+    move_from(std::move(other));
+  }
+
+  Tuple &operator=(Tuple &&other)
+  {
+    move_from(std::move(other));
+    return *this;
+  }
+
+  void copy(const Tuple &other)
+  {
+    this->meta_ptr_ = other.meta_ptr_;
+    this->record_ = other.record_;
+  }
+
+  void move_from(Tuple &&other)
+  {
+    this->meta_ptr_ = other.meta_ptr_;
+    this->record_ = std::move(other.record_);
+    other.meta_ptr_ = nullptr;
   }
 
   void init(TupleMeta *m, Bytes rec)
@@ -317,6 +407,50 @@ inline void encode_char(Bytes &bytes, const T &s)
   for (auto ch : s) {
     bytes.push_back(ch);
   }
+}
+
+inline bool compare_type(const TupleCellType &cell_type, const AttrType &attr_type)
+{
+  switch (cell_type) {
+    case TupleCellType::VARCHAR:
+    case TupleCellType::CHAR:
+      return attr_type == AttrType::STRING;
+    case TupleCellType::FLOAT:
+      return attr_type == AttrType::FLOATS;
+    case TupleCellType::INTEGER:
+      return attr_type == AttrType::INTS;
+    default:
+      return false;
+  }
+  return false;
+}
+
+inline RC make_record(const TupleMeta &meta, const std::vector<Value> &values, Record &rec)
+{
+  if (meta.cells_.size() != values.size()) {
+    return RC::TUPLE_CELL_NOT_EXIST;
+  }
+  auto &&cell_metas = meta.cells_;
+  Record r;
+  for (auto i = 0; i < cell_metas.size(); ++i) {
+    // 检查类型
+    auto &&cell_meta = cell_metas[i];
+    auto &&value = values[i];
+    if (!compare_type(cell_meta.type_, value.type_)) {
+      return RC::TUPLE_CELL_NOT_EXIST;
+    }
+    if (cell_meta.type_ == TupleCellType::CHAR) {
+      encode_char(r.data(), std::any_cast<const std::string &>(value.value_));
+    } else if (cell_meta.type_ == TupleCellType::VARCHAR) {
+      encode_varchar(r.data(), std::any_cast<const std::string &>(value.value_));
+    } else if (cell_meta.type_ == TupleCellType::INTEGER) {
+      encode_num(r.data(), std::any_cast<long>(value.value_));
+    } else {
+      encode_num(r.data(), std::any_cast<float>(value.value_));
+    }
+  }
+  rec.data() = std::move(r.data());
+  return RC::SUCCESS;
 }
 
 #include "storage/serilze/tuple.ipp"

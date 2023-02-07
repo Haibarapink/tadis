@@ -2,22 +2,62 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:29
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-16 10:46:14
+ * @LastEditTime: 2023-02-07 13:43:25
  * @FilePath: /tadis/src/storage/table.hpp
  * @Description: Table
  */
 #pragma once
 #include "common/utility.hpp"
+#include "sql/parser/ast.hpp"
+#include "storage/io/buffer_pool.hpp"
 #include "storage/kv/storage.hpp"
 #include "storage/tuple.hpp"
 #include <any>
+#include <boost/asio/detail/descriptor_ops.hpp>
 #include <boost/json/value.hpp>
 #include <memory>
 #include <string>
 #include <boost/core/noncopyable.hpp>
+#include <utility>
 
 class TableMeta {
 public:
+  friend class Table;
+  TableMeta() = default;
+  TableMeta(const TableMeta &other)
+  {
+    copy(other);
+  }
+
+  TableMeta &operator=(const TableMeta &other)
+  {
+    copy(other);
+    return *this;
+  }
+
+  TableMeta(TableMeta &&other)
+  {
+    move_from(std::move(other));
+  }
+
+  TableMeta &operator=(TableMeta &&other)
+  {
+    move_from(std::move(other));
+    return *this;
+  }
+
+  void copy(const TableMeta &other)
+  {
+    this->meta_ = other.meta_;
+    this->name_ = other.name_;
+  }
+
+  void move_from(TableMeta &&other)
+  {
+    this->meta_ = std::move(other.meta_);
+    this->name_ = std::move(other.name_);
+  }
+
   void init(std::string_view name, std::vector<TupleCellMeta> metas)
   {
     name_ = name;
@@ -52,28 +92,22 @@ private:
   TupleMeta meta_;
 };
 
-template <typename StorageType>
 class Table : public boost::noncopyable {
 public:
-  Table() = default;
-  ~Table() = default;
+  friend class TableManager;
 
-  void init(std::string_view name, TableMeta meta, std::string_view dir)
+  void init(std::string_view name, std::string_view dir, TableMeta meta)
   {
-    name_ = name;
-    table_meta_ = std::move(meta);
     dir_path_ = dir;
-    data_file_name_.append(make_data_filename(dir, name));
+    db_filename_ = make_data_filename(dir, name);
+    bfp_ = std::unique_ptr<BufferPool>{new BufferPool{std::string_view{db_filename_.data(), db_filename_.size()}}};
   }
 
-  void insert_record(BytesView rec);
-
 private:
-  std::string name_;
-  std::string dir_path_;
-  std::string data_file_name_;
   TableMeta table_meta_;
-  StorageType store_;
+  std::string dir_path_;
+  std::string db_filename_;
+  std::unique_ptr<BufferPool> bfp_ = nullptr;
 };
 
 #include "storage/serilze/table.ipp"

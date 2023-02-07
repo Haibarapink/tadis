@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-16 11:01:47
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-02 16:41:36
+ * @LastEditTime: 2023-02-07 13:43:46
  * @FilePath: /tadis/src/storage/db2.hpp
  * @Description: Db的实现
  */
@@ -21,7 +21,6 @@
 #include <string_view>
 #include <vector>
 
-template <typename StorageType>
 class TableManager {
 public:
   RC init(std::string_view path);
@@ -31,11 +30,10 @@ private:
   RC open_table(std::string_view filename);
 
   std::string base_dir_;
-  std::unordered_map<std::string, std::unique_ptr<Table<StorageType>>> tables_;
+  std::unordered_map<std::string, std::unique_ptr<Table>> tables_;
 };
 
-template <typename StorageType>
-RC TableManager<StorageType>::init(std::string_view path_str)
+inline RC TableManager::init(std::string_view path_str)
 {
   using namespace boost;
   base_dir_ = path_str;
@@ -56,16 +54,14 @@ RC TableManager<StorageType>::init(std::string_view path_str)
 }
 
 // ${base_dir}/table_${name}_meta.json
-template <typename StorageType>
-bool TableManager<StorageType>::check_filename(std::string_view filename)
+inline bool TableManager::check_filename(std::string_view filename)
 {
   std::string_view pattern = "table_\\w+_meta.json";
   std::regex rex{pattern.data()};
   return std::regex_match(filename.data(), rex);
 }
 
-template <typename StorageType>
-RC TableManager<StorageType>::open_table(std::string_view filename)
+inline RC TableManager::open_table(std::string_view filename)
 {
   auto json_data = parse_file2json(filename);
   Spliter s;
@@ -78,8 +74,8 @@ RC TableManager<StorageType>::open_table(std::string_view filename)
     return rc;
   }
 
-  Table<StorageType> table;
-  table.init(table_name, std::move(meta), base_dir_);
+  Table table;
+  table.init(table_name, base_dir_, std::move(meta));
   tables_.emplace(std::string{table_name.data(), table_name.size()}, std::move(table));
 
   return RC::SUCCESS;
