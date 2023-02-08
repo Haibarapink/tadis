@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-11 14:03:29
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-08 04:11:19
+ * @LastEditTime: 2023-02-08 12:21:14
  * @FilePath: /tadis/src/storage/table.hpp
  * @Description: Table
  */
@@ -142,6 +142,7 @@ public:
     RecordId rid;
     bool ok = rp_.insert(rec, rid);
     if (!ok) {
+      bfp_->unpin(pid, false);
       page = bfp_->new_page(pid);
       if (!page) {
         return RC::FETCH_PAGE_ERROR;
@@ -153,6 +154,8 @@ public:
         return RC::RECORD_TOO_LARGE;
       }
     }
+
+    bfp_->unpin(pid, true);
 
     return RC::SUCCESS;
   }

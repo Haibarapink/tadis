@@ -2,7 +2,7 @@
  * @Author: pink haibarapink@gmail.com
  * @Date: 2023-01-16 11:01:47
  * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-02-08 04:51:39
+ * @LastEditTime: 2023-02-08 05:04:13
  * @FilePath: /tadis/src/storage/db2.hpp
  * @Description: Db的实现
  */
@@ -116,7 +116,6 @@ inline RC TableManager::open_table(std::string_view filename)
   auto last = filename.find_last_of("_");
   auto first = filename.find_first_of("_");
   auto table_name = std::string_view{filename.data() + first + 1, last - first - 1};
-  std::cout << "tm " << table_name << std::endl;
 
   TableMeta meta;
   if (auto rc = meta.from_json(json_data); !rc_success(rc)) {
