@@ -1,5 +1,0 @@
-/home/pink/ides/clion-2022.3.2/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/pink/ides/clion-2022.3.2/bin/ninja/linux/x64/ninja -G Ninja -S /home/pink/project/cxx/tadis -B /home/pink/project/cxx/tadis/cmake-build-debug
-CMAKE_CXX_FLAGS is  -g -Wall -DCMAKE_EXPORT_COMPILE_COMMANDS=1
--- Configuring done
--- Generating done
--- Build files have been written to: /home/pink/project/cxx/tadis/cmake-build-debug
