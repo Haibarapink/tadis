@@ -9,20 +9,21 @@
 #pragma once
 #include "common/rc.hpp"
 #include "common/utility.hpp"
+#include "common/pson.hpp"
+#include "common/noncopyable.hpp"
+
 #include "sql/parser/ast.hpp"
 #include "storage/io/buffer_pool.hpp"
 #include "storage/io/iodef.hpp"
 #include "storage/io/record.hpp"
 #include "storage/kv/storage.hpp"
 #include "storage/tuple.hpp"
+
 #include <any>
-#include <boost/asio/detail/descriptor_ops.hpp>
-#include <boost/json/object.hpp>
-#include <boost/json/value.hpp>
 #include <cassert>
 #include <memory>
 #include <string>
-#include <boost/core/noncopyable.hpp>
+
 #include <utility>
 
 class TableMeta {
@@ -89,15 +90,15 @@ public:
     return RC::OUT_OF_RANGE;
   }
 
-  RC from_json(const boost::json::value &v);
-  boost::json::object to_json();
+  RC from_json(pson::Value &v);
+  pson::Value to_json();
 
 private:
   std::string name_;
   TupleMeta meta_;
 };
 
-class Table : public boost::noncopyable {
+class Table : public noncopyable {
 public:
   friend class TableManager;
   friend class TableTester;
@@ -192,4 +193,49 @@ private:
   std::unique_ptr<BufferPool> bfp_ = nullptr;
 };
 
-#include "storage/serilze/table.ipp"
+inline RC TableMeta::from_json(pson::Value &v)
+{
+
+  if (!v.is_object()) {
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+
+  auto &&obj = v.as<pson::Object>();
+
+  auto ok = obj.has("name");
+  if (ok == false) {
+    LOG_DEBUG << "can't find name_";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+  auto &&name_v = obj["name"];
+  if (!name_v.is_string()) {
+    LOG_DEBUG << "name_v's type isn't string";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+
+  name_ = name_v.as_string();
+
+  ok = obj.has("meta");
+
+  if ( ok == false) {
+    LOG_DEBUG << "can't find meta_";
+    return RC::OUT_OF_RANGE;
+  }
+
+  auto &&meta_v = obj["meta"];
+  if (auto rc = meta_.from_json(meta_v); !rc_success(rc)) {
+    return rc;
+  }
+
+  return RC::SUCCESS;
+}
+
+inline pson::Value TableMeta::to_json()
+{
+  pson::Value res{pson::JSON_TYPE::JSON_OBJECT};
+  auto&& obj = res.as_object();
+  obj.insert(std::string{"name"}, name_);
+  obj.insert(std::string{"meta"}, meta_.to_json());
+  return obj;
+}
+

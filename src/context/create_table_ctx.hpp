@@ -12,6 +12,7 @@
 #include "session/session.hpp"
 #include "storage/table.hpp"
 #include "storage/tuple.hpp"
+
 #include <cassert>
 
 class CreateTableCtx {

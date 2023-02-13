@@ -8,10 +8,14 @@
 #pragma once
 
 #include "storage/io/fileop.hpp"
-#include <boost/json/src.hpp>
+#include "common/pson.hpp"
 
-inline auto parse_file2json(std::string_view filename) -> boost::json::value
+inline auto parse_file2json(std::string_view filename) -> pson::Value
 {
   auto bytes = std_readfile(filename);
-  return boost::json::parse(std::string_view{bytes.data(), bytes.size()});
+  pson::Parser p{bytes.data(), bytes.size()};
+
+  pson::Value res;
+  p.Parse(res);
+  return res;
 }

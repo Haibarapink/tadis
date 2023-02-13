@@ -270,7 +270,11 @@ private:
 /** @brief 负责扫描整个table的record **/
 class RecordScanner {
 public:
-  RecordScanner() = default;
+  RecordScanner() {}
+
+  ~RecordScanner() {
+    bfp_->unpin(this->page_scanner_.next_rid_.page_id_, false);
+  }
 
   RC init(BufferPool *bfp)
   {

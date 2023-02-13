@@ -9,16 +9,17 @@
 #pragma once
 
 #include "common/rc.hpp"
+#include "common/noncopyable.hpp"
 #include "common/logger.hpp"
 #include "sql/parser/lexer.hpp"
 #include "sql/parser/ast.hpp"
+
 #include <cmath>
 #include <variant>
 #include <vector>
-#include <boost/noncopyable.hpp>
 
 template <typename InputType>
-class Parser : public boost::noncopyable {
+class Parser : public noncopyable {
 public:
   Parser(InputType input) : lexer_(input)
   {}

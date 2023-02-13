@@ -6,43 +6,78 @@
  * @FilePath: /tadis/src/common/logger.hpp
  * @Description: 对 boost log的包装
  */
-
 #pragma once
 
-#include <string_view>
-#include <boost/log/core.hpp>
-#include <boost/log/expressions/filter.hpp>
-#include <boost/log/keywords/severity.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
+#include <thread>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <filesystem>
 
-namespace tadis {
-namespace logging = boost::log;
-namespace src = boost::log::sources;
-namespace sinks = boost::log::sinks;
-namespace keywords = boost::log::keywords;
-
-// inline void set_filter(const logging::trivial::severity_level &level)
-// {
-//   // TODO doc bug
-// }
-
-inline void add_file_log(std::string_view file)
+class LogRecord
 {
-  logging::add_file_log(file);
+public:
+  friend class Logger;
+
+  LogRecord(std::string_view loglevel)
+  {
+    ss_ << "[" << loglevel << "]" ;
+  }
+
+  auto ss() -> std::stringstream &{
+    return ss_;
+  }
+
+  ~LogRecord();
+private:
+  std::stringstream ss_;
+};
+
+class Logger
+{
+public:
+  Logger() = default;
+  ~Logger() {
+    fs_.flush();
+  }
+
+  void init(std::string_view filename)
+  {
+    fs_.open(filename.data(), std::ios::out | std::ios::app);
+  }
+
+  void write_record(LogRecord& rec)
+  {
+    fs_ << rec.ss_.str() << "\n";
+  }
+
+  static Logger& logger()
+  {
+    if (!l.fs_.is_open()) {
+      l.init("default.log");
+    }
+    return l;
+  }
+
+  static void init_logger(std::string_view filename)
+  {
+    Logger::l.init(filename);
+  }
+private:
+  static Logger l;
+  std::fstream fs_;
+};
+
+Logger Logger::l;
+
+LogRecord::~LogRecord() {
+  auto && logger = Logger::logger();
+  logger.write_record(*this);
 }
-}  // namespace tadis
 
-#define BOOST_LOG_WRAP(level) BOOST_LOG_TRIVIAL(level) << "[" << __FILE__ << ":" << __LINE__ << "]"
+#define LOG(level) LogRecord(level).ss() << "[" << __FILE__ << ":" << __LINE__<< "]"
+#define LOG_DEBUG \
+            LOG("DEBUG")
+#define LOG_WARN \
+            LOG("WARN")
 
-#define LOG_TRACE BOOST_LOG_WRAP(trace)
-#define LOG_DEBUG BOOST_LOG_WRAP(debug)
-#define LOG_INFO BOOST_LOG_WRAP(info)
-#define LOG_WARN BOOST_LOG_WRAP(warning)
-#define LOG_ERROR BOOST_LOG_WRAP(error)
-#define LOG_FATAL BOOST_LOG_WRAP(fatal)

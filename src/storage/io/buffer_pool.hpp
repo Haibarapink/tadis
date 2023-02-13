@@ -11,6 +11,7 @@
 #include "common/rc.hpp"
 #include "common/bitmap.hpp"
 #include "common/logger.hpp"
+#include "common/noncopyable.hpp"
 #include "storage/io/disk.hpp"
 #include "storage/io/iodef.hpp"
 #include "storage/io/replacer.hpp"
@@ -27,7 +28,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <boost/core/noncopyable.hpp>
 
 class Page;
 class BufferPool;
@@ -143,7 +143,7 @@ private:
   bool dirty_ = false;
 };
 
-class BufferPool : public boost::noncopyable {
+class BufferPool : public noncopyable {
 public:
   friend class BufferPoolTester;
 

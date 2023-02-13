@@ -8,13 +8,13 @@
  */
 #pragma once
 #include "common/rc.hpp"
+#include "common/noncopyable.hpp"
 #include <any>
 #include <cassert>
 #include <tuple>
 #include <string>
 #include <string_view>
-#include <boost/noncopyable.hpp>
-#include <boost/core/noncopyable.hpp>
+
 
 template <typename T>
 using LexResult = std::pair<RC, T>;
@@ -74,7 +74,7 @@ enum class Token {
 };
 
 template <typename InputType>
-class Lexer : public boost::noncopyable {
+class Lexer : public noncopyable {
 public:
   Lexer()
   {}

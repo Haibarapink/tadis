@@ -7,8 +7,6 @@
  */
 #pragma once
 #include "common/rc.hpp"
-#include <boost/core/noncopyable.hpp>
-#include <boost/noncopyable.hpp>
 #include <span>
 #include <vector>
 #include <cstdint>
@@ -17,7 +15,7 @@ using Bytes = std::vector<char>;
 using BytesView = std::span<char>;
 
 template <typename T>
-class TStorage : public boost::noncopyable {
+class TStorage : public noncopyable {
 public:
   RC init(std::string_view path)
   {
@@ -50,7 +48,7 @@ public:
   }
 };
 
-class Storage : public boost::noncopyable {
+class Storage : public noncopyable {
 public:
   virtual RC get(const std::vector<char> &key, std::vector<char> &value) = 0;
   virtual RC set(std::vector<char> key, std::vector<char> value) = 0;

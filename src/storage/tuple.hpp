@@ -99,8 +99,8 @@ public:
     return tm;
   }
 
-  boost::json::object to_json();
-  RC from_json(const boost::json::value &v);
+  pson::Value to_json();
+  RC from_json(pson::Value &v);
 };
 
 class TupleMeta {
@@ -140,8 +140,8 @@ public:
     return meta;
   }
 
-  boost::json::value to_json();
-  RC from_json(const boost::json::value &v);
+  pson::Value to_json();
+  RC from_json(pson::Value &v);
 };
 
 class TupleCell {
@@ -544,4 +544,113 @@ inline RC make_record(const TupleMeta &meta, const std::vector<Value> &values, R
   return RC::SUCCESS;
 }
 
-#include "storage/serilze/tuple.ipp"
+template <typename T>
+inline pson::Value to_json(T &t)
+{
+  return t.to_json();
+}
+
+template <typename T>
+inline RC from_json(T &t, pson::Value &v)
+{
+  return t.from_json(v);
+}
+
+inline pson::Value TupleCellMeta::to_json()
+{
+  pson::Value res{pson::JSON_TYPE::JSON_OBJECT};
+  auto&& obj = res.as_object();
+  obj.insert(std::string{"name"}, name_);
+  obj.insert(std::string{"type"}, static_cast<int>(type_));
+  obj.insert(std::string{"len"}, len_);
+  obj.insert(std::string{"visible"}, visible_);
+
+  return res;
+}
+
+inline RC TupleCellMeta::from_json(pson::Value &v)
+{
+  if (!v.is_object()) {
+    LOG_DEBUG << "v is not a json object";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+  auto &&obj = v.as_object();
+
+  auto &&name_v = obj.at("name");
+
+  if (!name_v.is_string()) {
+    LOG_DEBUG << "name_v's type isn't string";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+  name_ = name_v.as_string();
+
+  auto &&type_v = obj.at("type");
+  if (!type_v.is_number()) {
+    LOG_DEBUG << "type_v's type isn't int64";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+
+  if ((long)type_v.as_number() > static_cast<int>(TupleCellType::UNKNOW) ||
+      (long)type_v.as_number() < static_cast<int>(TupleCellType::FLOAT)) {
+    LOG_DEBUG << "type_v " << (long)type_v.as_number() << " out of range of enum class";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+
+  type_ = static_cast<TupleCellType>((long)type_v.as_number());
+
+  auto &&len_v = obj.at("len");
+  if (!len_v.is_number()) {
+    LOG_DEBUG << "len_v's type isn't uint64";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+
+  len_ = (long)len_v.as_number();
+
+  auto &&visible_v = obj.at("visible");
+  if (!visible_v.is_bool()) {
+    LOG_DEBUG << "visible_v's type isn't bool";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+  visible_ = visible_v.as_bool();
+
+  return RC::SUCCESS;
+}
+
+inline pson::Value TupleMeta::to_json()
+{
+  pson::Value res{pson::JSON_TYPE::JSON_OBJECT};
+  pson::Object &obj = res.as_object();
+  pson::Array cells;
+  for (auto &cell : cells_) {
+    cells.push_back(cell.to_json());
+  }
+  obj.insert("cells", pson::Value(cells));
+
+  return res;
+}
+
+inline RC TupleMeta::from_json(pson::Value &v)
+{
+  if (!v.is_object()) {
+    LOG_DEBUG << "v isn't a json object";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+  auto &&obj = v.as_object();
+
+  auto &&cells_v = obj.at("cells");
+  if (!cells_v.is_array()) {
+    LOG_DEBUG << "cells_v isn't a json array";
+    return RC::JSON_DESERIALIZATION_ERROR;
+  }
+  auto &&cells = cells_v.as_array();
+  for (auto i = 0; i < cells.size(); ++i) {
+    auto&& cell = cells.at(i);
+    TupleCellMeta m;
+    auto rc = m.from_json(cell);
+    if (!rc_success(rc)) {
+      return rc;
+    }
+    cells_.emplace_back(std::move(m));
+  }
+  return RC::SUCCESS;
+}

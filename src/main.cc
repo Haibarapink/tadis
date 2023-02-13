@@ -17,7 +17,6 @@
 #include <fcntl.h>
 #include <filesystem>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <sys/stat.h>
 
@@ -76,14 +75,15 @@ void handle_query(std::string &query)
 
 int main(int argc, char *argv[])
 {
+  mkdir(".tadis", S_IRWXU);
+
   if (!std::filesystem::is_regular_file(std::filesystem::path{".tadis/tadis.log"})) {
     FILE *f = fopen(".tadis/tadis.log", "w+");
     fclose(f);
   }
 
-  tadis::add_file_log(".tadis/tadis.log");
+  Logger::init_logger(".tadis/tadis.log");
 
-  mkdir(".tadis", S_IRWXU);
   std::string dir{".tadis"};
   RC rc = init_gloabl_session(std::string_view{dir.data(), dir.size()});
   if (rc != RC::SUCCESS) {

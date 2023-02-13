@@ -14,8 +14,6 @@
 #include "storage/io/disk.hpp"
 #include "storage/table.hpp"
 
-#include <boost/json/kind.hpp>
-#include <boost/json/serialize.hpp>
 #include <chrono>
 #include <cstdio>
 #include <filesystem>
@@ -38,7 +36,7 @@ public:
     for (auto &&i : tables_) {
       auto table = i.second.get();
       auto json = table->table_meta_.to_json();
-      auto data = boost::json::serialize(json);
+      auto data = json.print();
       auto filename = make_meta_filename(base_dir_, i.first);
       FILE *f = fopen(filename.c_str(), "w+");
       assert(f);
