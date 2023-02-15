@@ -13,17 +13,13 @@
 #include "session/session.hpp"
 #include "sql/parser/parser.hpp"
 #include "storage/tuple.hpp"
+
 #include <cstdio>
-#include <fcntl.h>
 #include <filesystem>
 #include <iostream>
 #include <string>
-#include <sys/stat.h>
 
-void usage()
-{
-  std::cout << "Usage : tadis [database directory]";
-}
+
 
 void print_error(RC rc)
 {
@@ -75,8 +71,9 @@ void handle_query(std::string &query)
 
 int main(int argc, char *argv[])
 {
-  mkdir(".tadis", S_IRWXU);
-
+  if (!std::filesystem::is_directory(std::filesystem::path{".tadis"})) {
+    std::filesystem::create_directory(std::filesystem::path{".tadis"});
+  }
   if (!std::filesystem::is_regular_file(std::filesystem::path{".tadis/tadis.log"})) {
     FILE *f = fopen(".tadis/tadis.log", "w+");
     fclose(f);
@@ -87,7 +84,7 @@ int main(int argc, char *argv[])
   std::string dir{".tadis"};
   RC rc = init_gloabl_session(std::string_view{dir.data(), dir.size()});
   if (rc != RC::SUCCESS) {
-    std::cout << "init gloal session fail";
+    std::cout << "init global session fail";
     return 1;
   }
 

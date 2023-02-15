@@ -9,6 +9,7 @@
 #pragma once
 
 #include "storage/table_manager.hpp"
+
 #include <memory>
 
 class GlobalSession {
