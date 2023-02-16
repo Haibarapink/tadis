@@ -23,10 +23,9 @@
 #include <fstream>
 #include <iostream>
 #include <string_view>
-#include <strings.h>
-#include <unistd.h>
 #include <unordered_map>
 #include <vector>
+#include <string.h>
 
 
 class Page;

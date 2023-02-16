@@ -4,7 +4,7 @@
  * @LastEditors: pink haibarapink@gmail.com
  * @LastEditTime: 2023-01-15 00:24:11
  * @FilePath: /tadis/src/common/logger.hpp
- * @Description: 对 boost log的包装
+ * @Description: A logger that was writen very simple.
  */
 #pragma once
 

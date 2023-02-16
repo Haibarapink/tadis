@@ -18,9 +18,9 @@
 #include <cassert>
 #include <fstream>
 #include <ios>
-#include <strings.h>
 #include <cstdio>
 #include <filesystem>
+#include <string.h>
 
 class DiskManager {
 public:

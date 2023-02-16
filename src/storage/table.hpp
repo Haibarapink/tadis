@@ -90,8 +90,18 @@ public:
     return RC::OUT_OF_RANGE;
   }
 
+  auto tuple_meta() -> TupleMeta& {
+    return meta_;
+  }
+
+  const std::string& name()
+  {
+    return name_;
+  }
+
   RC from_json(pson::Value &v);
   pson::Value to_json();
+
 
 private:
   std::string name_;
@@ -185,6 +195,10 @@ public:
   RC remove()
   {}
 
+  auto table_meta() -> TableMeta& {
+    return table_meta_;
+  }
+
 private:
   TableMeta table_meta_;
   std::string dir_path_;
@@ -236,6 +250,6 @@ inline pson::Value TableMeta::to_json()
   auto&& obj = res.as_object();
   obj.insert(std::string{"name"}, name_);
   obj.insert(std::string{"meta"}, meta_.to_json());
-  return obj;
+  return res;
 }
 

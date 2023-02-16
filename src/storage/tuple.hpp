@@ -14,6 +14,7 @@
 #include "common/utility.hpp"
 #include "storage/io/record.hpp"
 #include "sql/parser/ast.hpp"
+#include "tuple_utility.hpp"
 
 #include <cassert>
 #include <cstdint>
@@ -200,7 +201,7 @@ public:
     return cell_record_;
   }
 
-  auto as_integer()
+  auto as_integer() const
   {
     assert(type_ == TupleCellType::INTEGER && cell_record_.size() == sizeof(long));
     long res{0};
@@ -208,7 +209,7 @@ public:
     return res;
   }
 
-  auto as_float()
+  auto as_float() const
   {
     assert(type_ == TupleCellType::FLOAT && cell_record_.size() == sizeof(float));
     float res{0.0};
@@ -216,7 +217,7 @@ public:
     return res;
   }
 
-  auto as_str()
+  auto as_str() const
   {
     assert(type_ == TupleCellType::CHAR || type_ == TupleCellType::VARCHAR);
     std::string res;
@@ -226,7 +227,7 @@ public:
     return res;
   }
 
-  auto as_str_view()
+  auto as_str_view() const
   {
     assert(type_ == TupleCellType::CHAR || type_ == TupleCellType::VARCHAR);
     std::string_view res{cell_record_.data(), cell_record_.size()};
@@ -238,7 +239,7 @@ public:
     return cell_record_;
   }
 
-  std::string to_string()
+  std::string to_string() const 
   {
     std::string res;
     switch (type_) {
@@ -654,3 +655,150 @@ inline RC TupleMeta::from_json(pson::Value &v)
   }
   return RC::SUCCESS;
 }
+
+// 这里是filter
+class Comparator
+{
+public:
+  static int cmp(const TupleCell& l ,const TupleCell& r)
+  {
+    assert(l.type() == r.type());
+    switch (l.type()) {
+      case TupleCellType::VARCHAR:
+      case TupleCellType::CHAR:
+        return cmp_str(l.as_str_view(), r.as_str_view());
+      case TupleCellType::FLOAT:
+        return cmp_num(l.as_float(), r.as_float());
+      case TupleCellType::INTEGER:
+        return cmp_num(l.as_integer(), r.as_integer());
+      case TupleCellType::UNKNOW:
+        assert(false);
+    }
+
+    // make compiler happy
+    return -1;
+  }
+
+  static int cmp(const Value& l, const TupleCell& r)
+  {
+    bool check_type = compare_type(r.type(), l.type_);
+    assert(check_type);
+    switch (r.type()) {
+      case TupleCellType::VARCHAR:
+      case TupleCellType::CHAR: {
+        const std::string& l_str = std::any_cast<const std::string&>(l.value_);
+        return cmp_str(std::string_view{l_str.data(), l_str.size()}, r.as_str_view());
+      }
+      case TupleCellType::FLOAT:
+        return cmp_num(std::any_cast<float>(l.value_), r.as_float());
+      case TupleCellType::INTEGER:
+        return cmp_num(std::any_cast<long>(l.value_), r.as_integer());
+    }
+    // make compiler happy
+    return -1;
+  }
+
+};
+
+// Check a tuple's cell
+class TupleCellFilter
+{
+public:
+  friend class TupleFilter;
+
+  TupleCellFilter(Value v, CondOp op): v_(std::move(v)), op_(op)
+  {
+    assert(op != CondOp::UNDEFINED);
+  }
+
+  TupleCellFilter(TupleCellFilter&& other) : v_(std::move(other.v_)), op_(other.op_)
+  {
+    other.op_ = CondOp::UNDEFINED;
+  }
+
+  TupleCellFilter& operator= (TupleCellFilter&& other)
+  {
+    v_ = std::move(other.v_);
+    op_ = other.op_;
+    other.op_ = CondOp::UNDEFINED;
+    return *this;
+  }
+
+  bool check(const TupleCell& cell)
+  {
+    int res = Comparator::cmp(v_, cell);
+
+    switch (op_) {
+      case CondOp::EQ:
+        return res == 0;
+
+      case CondOp::GREATER:
+        return res > 0;
+      // TODO IN IS ISNOT
+      case CondOp::IN:
+      case CondOp::IS:
+      case CondOp::IS_NOT:
+        return false;
+
+      case CondOp::NOT_EQ:
+        return res != 0;
+      case CondOp::SMALLER:
+        return res < 0;
+      case CondOp::UNDEFINED:
+        assert(false);
+        break;
+    }
+  }
+
+private:
+  Value v_;
+  CondOp op_;
+};
+
+
+class TupleFilter
+{
+public:
+  TupleFilter() {}
+
+  ~TupleFilter() {}
+
+  void clear()
+  {
+    idx_.clear();
+    filters_.clear();
+  }
+
+  bool check(Tuple & t)
+  {
+    for (auto i = 0; i < idx_.size(); ++i)
+    {
+      auto idx = idx_[i];
+      auto&& cell_filter = filters_[i];
+      TupleCell tcl;
+
+      auto rc = t.get_cell(idx, tcl);
+      if (!rc_success(rc)) {
+        assert(rc != RC::OUT_OF_RANGE);
+        return false;
+      }
+
+      bool is_ok = cell_filter.check(tcl);
+      if (!is_ok) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void add_cell_filter(size_t idx, TupleCellFilter filter)
+  {
+    idx_.emplace_back(idx);
+    filters_.emplace_back(std::move(filter));
+  }
+
+
+private:
+  std::vector<size_t> idx_;     // cell's idx for filters_
+  std::vector<TupleCellFilter> filters_;
+};
