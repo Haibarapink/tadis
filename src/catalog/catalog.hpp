@@ -3,7 +3,6 @@
  * @Date: 2023-01-31 19:58:05
  * @LastEditors: pink haibarapink@gmail.com
  * @LastEditTime: 2023-03-09 14:54:50
- * @FilePath: /tadis/src/session/session.hpp
  * @Description: ...
  */
 #pragma once
@@ -12,7 +11,7 @@
 
 #include <memory>
 
-class GlobalSession {
+class Catalog {
 public:
   RC init(std::string_view base_dir)
   {
@@ -25,11 +24,9 @@ public:
     return tm_.get();
   }
 
-  // Get gloabl session
-  static GlobalSession &global_session()
+  static Catalog &catalog()
   {
-    // single in cpp , hhhh
-    static GlobalSession s;
+    static Catalog s;
     return s;
   }
 
@@ -38,8 +35,8 @@ private:
 };
 
 // Helper function
-inline RC init_gloabl_session(std::string_view path)
+inline RC init(std::string_view path)
 {
-  auto &&session = GlobalSession::global_session();
-  return session.init(path);
+  auto &&catalog = Catalog::catalog();
+  return catalog.init(path);
 }

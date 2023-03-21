@@ -21,6 +21,7 @@
 
 #include <any>
 #include <cassert>
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -90,18 +91,18 @@ public:
     return RC::OUT_OF_RANGE;
   }
 
-  auto tuple_meta() -> TupleMeta& {
+  auto tuple_meta() -> TupleMeta &
+  {
     return meta_;
   }
 
-  const std::string& name()
+  const std::string &name()
   {
     return name_;
   }
 
   RC from_json(pson::Value &v);
   pson::Value to_json();
-
 
 private:
   std::string name_;
@@ -121,8 +122,8 @@ public:
     bfp_ = std::unique_ptr<BufferPool>{new BufferPool{std::string_view{db_filename_.data(), db_filename_.size()}}};
   }
 
-  // TODO
-  RC insert(const std::vector<std::string> &cols, const std::vector<Value> &values)
+  // 如果cols是nullptr就表示values是整个行
+  RC insert(const std::vector<std::string> *cols, const std::vector<Value> &values)
   {
     auto pid = bfp_->current_pid();
     Page *page = nullptr;
@@ -140,7 +141,7 @@ public:
     rp_.init(page);
     Record rec;
 
-    if (cols.size() == 0) {
+    if (cols == nullptr) {
       rc = make_record(table_meta_.meta_, values, rec);
       if (!rc_success(rc)) {
         return rc;
@@ -195,8 +196,25 @@ public:
   RC remove()
   {}
 
-  auto table_meta() -> TableMeta& {
+  auto table_meta() -> TableMeta &
+  {
     return table_meta_;
+  }
+
+  // check values's types compling with the table's colum type
+  bool check(const std::vector<Value> &values)
+  {
+    if (values.size() != table_meta_.meta_.cells_.size()) {
+      return false;
+    }
+    auto &tm = table_meta_.meta_.cells_;
+    for (auto i = 0; i < values.size(); ++i) {
+      bool ok = tm[i].check(values[i].type_);
+      if (!ok) {
+        return ok;
+      }
+    }
+    return true;
   }
 
 private:
@@ -231,7 +249,7 @@ inline RC TableMeta::from_json(pson::Value &v)
 
   ok = obj.has("meta");
 
-  if ( ok == false) {
+  if (ok == false) {
     LOG_DEBUG << "can't find meta_";
     return RC::OUT_OF_RANGE;
   }
@@ -247,9 +265,8 @@ inline RC TableMeta::from_json(pson::Value &v)
 inline pson::Value TableMeta::to_json()
 {
   pson::Value res{pson::JSON_TYPE::JSON_OBJECT};
-  auto&& obj = res.as_object();
+  auto &&obj = res.as_object();
   obj.insert(std::string{"name"}, name_);
   obj.insert(std::string{"meta"}, meta_.to_json());
   return res;
 }
-

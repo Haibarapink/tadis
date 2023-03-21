@@ -270,9 +270,11 @@ private:
 /** @brief 负责扫描整个table的record **/
 class RecordScanner {
 public:
-  RecordScanner() {}
+  RecordScanner()
+  {}
 
-  ~RecordScanner() {
+  ~RecordScanner()
+  {
     bfp_->unpin(this->page_scanner_.next_rid_.page_id_, false);
   }
 
@@ -379,8 +381,6 @@ inline bool RecordPage::insert(const Record &rec, RecordId &rid)
 
 inline bool RecordPage::remove(const RecordId &rid)
 {
-  // TODO 合并?
-  // 问题: 野指针，什么时候合并.
   if (rec_idx_.empty() || rec_idx_.size() <= rid.slot_id_) {
     return false;
   }

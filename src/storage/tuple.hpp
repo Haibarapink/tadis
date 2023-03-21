@@ -8,6 +8,7 @@
 #pragma once
 
 #include "common/bytes.hpp"
+#include "common/expect.hpp"
 #include "common/logger.hpp"
 #include "common/rc.hpp"
 #include "common/json.hpp"
@@ -98,6 +99,42 @@ public:
     tm.type_ = type;
     tm.len_ = len;
     return tm;
+  }
+
+  static TupleCellMeta init(const ColAttr &col)
+  {
+    TupleCellMeta tm;
+
+    tm.name_ = col.name_;
+    tm.len_ = col.size_;
+
+    if (col.type_ == "VARCHAR") {
+      tm.type_ = TupleCellType::VARCHAR;
+    } else if (col.type_ == "CHAR") {
+      tm.type_ = TupleCellType::CHAR;
+    } else if (col.type_ == "INT") {
+      tm.type_ = TupleCellType::INTEGER;
+    } else if (col.type_ == "FLOAT") {
+      tm.type_ = TupleCellType::FLOAT;
+    } else {
+      assert(false);
+    }
+    return tm;
+  }
+
+  bool check(const AttrType &type)
+  {
+    switch (type_) {
+      case TupleCellType::VARCHAR:
+      case TupleCellType::CHAR:
+        return type == AttrType::STRING;
+      case TupleCellType::FLOAT:
+        return type == AttrType::FLOATS;
+      case TupleCellType::INTEGER:
+        return type == AttrType::INTS;
+      default:
+        return false;
+    }
   }
 
   pson::Value to_json();
@@ -239,7 +276,7 @@ public:
     return cell_record_;
   }
 
-  std::string to_string() const 
+  std::string to_string() const
   {
     std::string res;
     switch (type_) {
@@ -560,7 +597,7 @@ inline RC from_json(T &t, pson::Value &v)
 inline pson::Value TupleCellMeta::to_json()
 {
   pson::Value res{pson::JSON_TYPE::JSON_OBJECT};
-  auto&& obj = res.as_object();
+  auto &&obj = res.as_object();
   obj.insert(std::string{"name"}, name_);
   obj.insert(std::string{"type"}, static_cast<int>(type_));
   obj.insert(std::string{"len"}, len_);
@@ -645,7 +682,7 @@ inline RC TupleMeta::from_json(pson::Value &v)
   }
   auto &&cells = cells_v.as_array();
   for (auto i = 0; i < cells.size(); ++i) {
-    auto&& cell = cells.at(i);
+    auto &&cell = cells.at(i);
     TupleCellMeta m;
     auto rc = m.from_json(cell);
     if (!rc_success(rc)) {
@@ -657,10 +694,9 @@ inline RC TupleMeta::from_json(pson::Value &v)
 }
 
 // 这里是filter
-class Comparator
-{
+class Comparator {
 public:
-  static int cmp(const TupleCell& l ,const TupleCell& r)
+  static int cmp(const TupleCell &l, const TupleCell &r)
   {
     assert(l.type() == r.type());
     switch (l.type()) {
@@ -679,44 +715,44 @@ public:
     return -1;
   }
 
-  static int cmp(const Value& l, const TupleCell& r)
+  static int cmp(const Value &l, const TupleCell &r)
   {
     bool check_type = compare_type(r.type(), l.type_);
     assert(check_type);
     switch (r.type()) {
       case TupleCellType::VARCHAR:
       case TupleCellType::CHAR: {
-        const std::string& l_str = std::any_cast<const std::string&>(l.value_);
+        const std::string &l_str = std::any_cast<const std::string &>(l.value_);
         return cmp_str(std::string_view{l_str.data(), l_str.size()}, r.as_str_view());
       }
       case TupleCellType::FLOAT:
         return cmp_num(std::any_cast<float>(l.value_), r.as_float());
       case TupleCellType::INTEGER:
         return cmp_num(std::any_cast<long>(l.value_), r.as_integer());
+      default:
+        assert(false);
     }
     // make compiler happy
     return -1;
   }
-
 };
 
 // Check a tuple's cell
-class TupleCellFilter
-{
+class TupleCellFilter {
 public:
   friend class TupleFilter;
 
-  TupleCellFilter(Value v, CondOp op): v_(std::move(v)), op_(op)
+  TupleCellFilter(Value v, CondOp op) : v_(std::move(v)), op_(op)
   {
     assert(op != CondOp::UNDEFINED);
   }
 
-  TupleCellFilter(TupleCellFilter&& other) : v_(std::move(other.v_)), op_(other.op_)
+  TupleCellFilter(TupleCellFilter &&other) : v_(std::move(other.v_)), op_(other.op_)
   {
     other.op_ = CondOp::UNDEFINED;
   }
 
-  TupleCellFilter& operator= (TupleCellFilter&& other)
+  TupleCellFilter &operator=(TupleCellFilter &&other)
   {
     v_ = std::move(other.v_);
     op_ = other.op_;
@@ -724,7 +760,7 @@ public:
     return *this;
   }
 
-  bool check(const TupleCell& cell)
+  bool check(const TupleCell &cell)
   {
     int res = Comparator::cmp(v_, cell);
 
@@ -753,52 +789,4 @@ public:
 private:
   Value v_;
   CondOp op_;
-};
-
-
-class TupleFilter
-{
-public:
-  TupleFilter() {}
-
-  ~TupleFilter() {}
-
-  void clear()
-  {
-    idx_.clear();
-    filters_.clear();
-  }
-
-  bool check(Tuple & t)
-  {
-    for (auto i = 0; i < idx_.size(); ++i)
-    {
-      auto idx = idx_[i];
-      auto&& cell_filter = filters_[i];
-      TupleCell tcl;
-
-      auto rc = t.get_cell(idx, tcl);
-      if (!rc_success(rc)) {
-        assert(rc != RC::OUT_OF_RANGE);
-        return false;
-      }
-
-      bool is_ok = cell_filter.check(tcl);
-      if (!is_ok) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  void add_cell_filter(size_t idx, TupleCellFilter filter)
-  {
-    idx_.emplace_back(idx);
-    filters_.emplace_back(std::move(filter));
-  }
-
-
-private:
-  std::vector<size_t> idx_;     // cell's idx for filters_
-  std::vector<TupleCellFilter> filters_;
 };

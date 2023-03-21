@@ -34,14 +34,14 @@ SET(CMAKE_C_FLAGS ${CMAKE_COMMON_FLAGS})
 MESSAGE("CMAKE_CXX_FLAGS is " ${CMAKE_CXX_FLAGS})
 INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/src/" SYSTEM)
 
-ADD_EXECUTABLE(tadis ${PROJECT_SOURCE_DIR}/src/main.cc)
+# ADD_EXECUTABLE(tadis ${PROJECT_SOURCE_DIR}/src/main.cc)
 #TARGET_LINK_LIBRARIES(tadis PRIVATE
 #    pthread
 #    boost_log
 #    boost_thread
 #    boost_log_setup
 #)
-
+ADD_EXECUTABLE(exec ${PROJECT_SOURCE_DIR}/unit_tests/exec.cc)
 # Tests
 #ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/unit_tests/lex_test.cc)
 #ADD_EXECUTABLE(log_test ${PROJECT_SOURCE_DIR}/unit_tests/log_test.cc)

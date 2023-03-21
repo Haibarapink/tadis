@@ -16,6 +16,9 @@
 
 class Stage : public noncopyable {
 public:
+  Stage() = default;
+  ~Stage() = default;
+
   RC do_request()
   {
     auto rc = handle_event();
@@ -25,19 +28,20 @@ public:
     }
 
     if (next_) {
-      return next_->handle_event();
+      return next_->do_request();
     }
     return RC::SUCCESS;
   }
 
+  // 管理下一个Stage的生命周期
   void set_next(Stage *next)
   {
-    next_ = next;
+    next_.reset(next);
   }
 
-  virtual RC handle_event();
+  virtual RC handle_event() = 0;
 
 protected:
   std::string name_ = "Unknow";
-  Stage *next_ = nullptr;
+  std::unique_ptr<Stage> next_ = nullptr;
 };
