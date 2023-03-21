@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#include "common/logger.hpp"
+#include "common/rc.hpp"
 #include "operator/operator.hpp"
 #include "stage/stage.hpp"
 #include "statement/insert_stmt.hpp"
@@ -23,8 +25,12 @@ public:
   RC handle_event()
   {
     assert(op_);
+    std::vector<Tuple> res;
     if (op_->has_next()) {
-      op_->next(nullptr);
+      RC rc = op_->next(&res);
+      if (!rc_success(rc)) {
+        LOG_WARN << rc2str(rc);
+      }
     }
     return RC::SUCCESS;
   }

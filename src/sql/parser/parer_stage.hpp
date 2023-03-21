@@ -9,14 +9,20 @@
 #pragma once
 
 #include "catalog/catalog.hpp"
+#include "common/logger.hpp"
 #include "operator/create_table_op.hpp"
 #include "operator/operator.hpp"
+#include "operator/table_scan_op.hpp"
 #include "sql/parser/ast.hpp"
 #include "sql/parser/parser.hpp"
 #include "execution/exec_stage.hpp"
 #include "stage/stage.hpp"
 #include "statement/create_table_stmt.hpp"
 #include "operator/insert_op.hpp"
+#include "operator/select_op.hpp"
+#include "statement/filter_stmt.hpp"
+
+#include <bits/types/FILE.h>
 #include <variant>
 
 class ParsingStage : public Stage {
@@ -41,10 +47,51 @@ public:
     }
 
     Stage *exec = new ExecStage{};
+    auto table_manager = Catalog::catalog().table_manager();
     auto &ast = parser.query();
     if (std::holds_alternative<SelectAst>(ast)) {
+      //
+      // Select Op
+      //
+      auto &ss = const_cast<SelectAst &>(std::get<SelectAst>(ast));
+      Operator *op = new SelectOp{};
 
+      if (!table_manager->contain(ss.from_list_[0])) {
+        return RC::TABLE_NOT_EXISTED;
+      }
+
+      Operator *table_scan_op = new TableScanOp{table_manager->table(ss.from_list_[0])};
+
+      // check conditions' attributes
+      for (auto &cnd : ss.cond_list_) {
+        if (cnd.left_.type_ != AttrType::REL_ATTR && cnd.right_.type_ != AttrType::REL_ATTR) {
+          continue;
+        }
+        auto &&c = cnd.left_.type_ == AttrType::REL_ATTR ? cnd.left_ : cnd.right_;
+        auto &&attr = std::any_cast<RelAttr &>(c.value_);
+
+        if (attr.table_ != ss.from_list_[0]) {
+          LOG_WARN << "attr.table_ != ss.from_list_[0]";
+          return RC::TABLE_NOT_EXISTED;
+        }
+      }
+
+      if (!ss.cond_list_.empty()) {
+        FilterStmt filter_stmt{std::move(ss.cond_list_)};
+        Operator *filter_op = new FilterOp{std::move(filter_stmt)};
+
+        filter_op->add_child(table_scan_op);
+        op->add_child(filter_op);
+      } else {
+        op->add_child(table_scan_op);
+      }
+
+      ((ExecStage *)(exec))->set_op(op);
+      LOG_DEBUG << "Select Op";
     } else if (std::holds_alternative<CreateTableAst>(ast)) {
+      //
+      // Create Table Op
+      //
       auto &cs = const_cast<CreateTableAst &>(std::get<CreateTableAst>(ast));
       CreateTbaleStmt stmt;
       stmt.table_name = std::move(cs.table_name_);

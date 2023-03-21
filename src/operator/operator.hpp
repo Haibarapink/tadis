@@ -21,6 +21,11 @@ public:
   virtual bool has_next() = 0;
   virtual RC close() = 0;
 
+  void add_child(Operator *op)
+  {
+    children_.push_back(std::unique_ptr<Operator>{op});
+  }
+
 protected:
   std::vector<std::unique_ptr<Operator>> children_;
 };

@@ -112,6 +112,7 @@ private:
 class Table : public noncopyable {
 public:
   friend class TableManager;
+  friend class TableScanOp;
   friend class TableTester;
 
   void init(std::string_view dir, TableMeta meta)

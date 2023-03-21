@@ -44,9 +44,19 @@ void insert_test()
   exec_query([&](int where) {}, query2);
 }
 
+void select_test()
+{
+  std::string query1 = "Create table t (name varchar(10), age int);";
+  std::string query2 = "insert into t values ('pink', 100);";
+  std::string query3 = "Select * from t where t.name = 'pinkk';";
+  exec_query([&](int where) {}, query1);
+  exec_query([&](int where) {}, query2);
+  exec_query([&](int where) {}, query3);
+}
+
 int main(int argc, char *argv[])
 {
-  Catalog::catalog().init("./.tadis");
-  insert_test();
+  Catalog::catalog().init("tadis");
+  select_test();
   Catalog::catalog().table_manager()->close();
 }

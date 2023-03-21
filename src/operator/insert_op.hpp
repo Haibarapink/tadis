@@ -10,13 +10,14 @@ public:
 
   RC next(std::vector<Tuple> *tuples)
   {
+    done_ = true;
     RC rc = stmt_.table_->insert(nullptr, stmt_.values_);
     return rc;
   }
 
   bool has_next()
   {
-    return done_;
+    return done_ == false;
   }
 
   RC close()
