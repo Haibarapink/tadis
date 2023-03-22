@@ -598,10 +598,10 @@ inline pson::Value TupleCellMeta::to_json()
 {
   pson::Value res{pson::JSON_TYPE::JSON_OBJECT};
   auto &&obj = res.as_object();
-  obj.insert(std::string{"name"}, name_);
-  obj.insert(std::string{"type"}, static_cast<int>(type_));
-  obj.insert(std::string{"len"}, len_);
-  obj.insert(std::string{"visible"}, visible_);
+  obj.insert(std::string{"name"}, pson::Value{name_});
+  obj.insert(std::string{"type"}, pson::Value{static_cast<int64_t>(type_)});
+  obj.insert(std::string{"len"}, pson::Value{static_cast<int64_t>(len_)});
+  obj.insert(std::string{"visible"}, pson::Value{visible_});
 
   return res;
 }

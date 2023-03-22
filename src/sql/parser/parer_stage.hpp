@@ -4,7 +4,6 @@
  * @LastEditors: pink haibarapink@gmail.com
  * @LastEditTime: 2023-03-11 09:32:17
  * @FilePath: /tadis/src/stage/parsing_stage.hpp
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置:
  */
 #pragma once
 
@@ -22,7 +21,6 @@
 #include "operator/select_op.hpp"
 #include "statement/filter_stmt.hpp"
 
-#include <bits/types/FILE.h>
 #include <variant>
 
 class ParsingStage : public Stage {

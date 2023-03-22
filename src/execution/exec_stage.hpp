@@ -11,8 +11,10 @@
 #include "common/logger.hpp"
 #include "common/rc.hpp"
 #include "operator/operator.hpp"
+#include "result/result_stage.hpp"
 #include "stage/stage.hpp"
 #include "statement/insert_stmt.hpp"
+#include <functional>
 #include <vector>
 
 class ExecStage : public Stage {
@@ -26,12 +28,18 @@ public:
   {
     assert(op_);
     std::vector<Tuple> res;
+    RC rc = RC::SUCCESS;
     if (op_->has_next()) {
-      RC rc = op_->next(&res);
+      rc = op_->next(&res);
       if (!rc_success(rc)) {
         LOG_WARN << rc2str(rc);
+        return rc;
       }
     }
+
+    Stage *res_stage = new ResultStage{};
+    ((ResultStage *)res_stage)->init(std::move(res), rc);
+    this->set_next(res_stage);
     return RC::SUCCESS;
   }
 

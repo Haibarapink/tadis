@@ -7,6 +7,7 @@
  * @Description: Db的实现
  */
 #pragma once
+#include "common/logger.hpp"
 #include "common/rc.hpp"
 #include "common/utility.hpp"
 #include "common/json.hpp"
@@ -89,6 +90,7 @@ inline RC TableManager::init(std::string_view path_str)
     if (filesystem::is_regular_file(entry)        // 是一个文件
         && check_filename(entry.path().string())  // 检查文件名
     ) {
+      LOG_DEBUG << "Entry name" << entry.path().string();
       auto &&table_meta_filename = entry.path().string();
       if (auto rc = open_table(std::string_view{table_meta_filename.data(), table_meta_filename.size()});
           !rc_success(rc)) {

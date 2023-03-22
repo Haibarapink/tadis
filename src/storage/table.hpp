@@ -267,7 +267,7 @@ inline pson::Value TableMeta::to_json()
 {
   pson::Value res{pson::JSON_TYPE::JSON_OBJECT};
   auto &&obj = res.as_object();
-  obj.insert(std::string{"name"}, name_);
+  obj.insert(std::string{"name"}, pson::Value{name_});
   obj.insert(std::string{"meta"}, meta_.to_json());
   return res;
 }

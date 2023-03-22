@@ -16,7 +16,7 @@ SET(CMAKE_CXX_STANDARD 20)
 #    MESSAGE(STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
 #ENDIF()
 
-SET(EXECUTABLE_OUTPUT_PATH  ${PROJECT_SOURCE_DIR}/build/bin)
+#SET(EXECUTABLE_OUTPUT_PATH  ${PROJECT_SOURCE_DIR}/build/bin)
 
 # For clangd ccls lsp
 SET(DCMAKE_EXPORT_COMPILE_COMMANDS True)
@@ -41,7 +41,8 @@ INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/src/" SYSTEM)
 #    boost_thread
 #    boost_log_setup
 #)
-ADD_EXECUTABLE(exec ${PROJECT_SOURCE_DIR}/unit_tests/exec.cc)
+set(CMAKE_EXECUTABLE_SUFFIX ".html")
+ADD_EXECUTABLE(index ${PROJECT_SOURCE_DIR}/src/main.cc)
 # Tests
 #ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/unit_tests/lex_test.cc)
 #ADD_EXECUTABLE(log_test ${PROJECT_SOURCE_DIR}/unit_tests/log_test.cc)
