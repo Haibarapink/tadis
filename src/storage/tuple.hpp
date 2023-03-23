@@ -222,6 +222,11 @@ public:
     return *this;
   }
 
+  // low performance
+  size_t size() const {
+    return to_string().size();
+  }
+
   void copy(const TupleCell &other)
   {
     this->cell_record_ = other.cell_record_;
@@ -361,6 +366,17 @@ public:
     return this->meta_ptr_;
   }
 
+  auto size() const {
+    return meta_ptr_->cells_.size();
+  }
+
+  TupleCell operator[] (size_t p) {
+    TupleCell c;
+    assert(p < size() && "out of range");
+    get_cell(p, c);
+    return c;
+  }
+
   RC get_cell(size_t idx, TupleCell &c)
   {
     assert(meta_ptr_);
@@ -464,6 +480,7 @@ public:
     c = TupleCell{};
     return RC::TUPLE_CELL_NOT_EXIST;
   }
+
 
   std::string to_string()
   {

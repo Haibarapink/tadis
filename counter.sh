@@ -8,4 +8,3 @@ do
 done
 
 echo "C++ code line count: $line_count"
-
