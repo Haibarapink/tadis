@@ -8,18 +8,32 @@
 -->
 
 # Tadis - A simple relational database
-![image](doc/tadis.png)
+```
+     +---------+
+    / |           / |
+   /  |          /  |
+  /   |         /   |   
+ +---------+   |
+ |    | +----|---+
+ |    |/        |  /
+ |    /         |/
+ +---------+                      
+ ```
 
 ## Running 
-![image](doc/running.png)
+![image](doc/tadis0.0.3.png)
 
 ## Table of Contents
 
-- [Instaroduction](#Introduction)
-- [Install](#Install)
-- [Usage](#Usage)
-- [Contributing](#contributing)
-- [License](#license)
+- [Tadis - A simple relational database](#tadis---a-simple-relational-database)
+  - [Running](#running)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Install](#install)
+    - [Linux](#linux)
+  - [Usage](#usage)
+    - [COMMAND](#command)
+    - [SQL](#sql)
 
 ## Introduction
  Tadis is a relational database and it's my personal project.
@@ -27,8 +41,6 @@
  Tadis supports poor SQL's grammers.
 
 ## Install
-  Make sure your computer already installed the [boost library](https://www.boost.org/)
-  
   ### Linux
 
   ```
@@ -41,6 +53,20 @@
   ...
 
 ## Usage
+### COMMAND
+* .quit
+ 
+  quit
+
+* .clear
+
+  clear termnal
+* .exec + filename 
+```
+$ .exec
+$ filename
+execute the sql in file
+```
 ### SQL 
 * Create table example
 ```
@@ -52,8 +78,6 @@ Tadis supports these SQL datatypes: VARCHAR(size), CHAR(size), FLOAT, INT.
 ```
 INSERT INTO school VALUES ('AAU', 55);
 ```
-
-
 * Delete example
 ```
 TODO:
@@ -64,6 +88,9 @@ DELETE FROM school WHERE school.name='HKU';
 * Select example
 ```
 SELECT * FROM school;
-TODO:
 SELECT school.name , school.age FROM SCHOOL where age=100; 
+```
+*Drop table example
+```
+DROP TABLE school;
 ```
