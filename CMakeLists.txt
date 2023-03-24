@@ -2,6 +2,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(tadis)
 SET(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_C_COMPILER "/usr/bin/clang")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+
+
 # SET(BOOST_ROOT /home/pink/boost/boost_1_81_0)
 #SET(Boost_INCLUDE_DIRS /home/pink/boost/boost_1_81_0)
 #LINK_DIRECTORIES("/home/pink/boost/boost_1_81_0/stage/lib")
@@ -45,7 +49,9 @@ INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/src/" SYSTEM)
 # For webassamber
 #set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
-ADD_EXECUTABLE(index ${PROJECT_SOURCE_DIR}/src/main.cc)
+ADD_EXECUTABLE(main ${PROJECT_SOURCE_DIR}/src/main.cc)
+
+
 #ADD_EXECUTABLE(server ${PROJECT_SOURCE_DIR}/src/server.cc)
 # Tests
 #ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/unit_tests/lex_test.cc)
