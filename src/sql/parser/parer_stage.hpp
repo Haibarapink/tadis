@@ -19,6 +19,7 @@
 #include "statement/create_table_stmt.hpp"
 #include "operator/insert_op.hpp"
 #include "operator/select_op.hpp"
+#include "operator/drop_op.hpp"
 #include "statement/filter_stmt.hpp"
 
 #include <variant>
@@ -68,7 +69,7 @@ public:
         auto &&c = cnd.left_.type_ == AttrType::REL_ATTR ? cnd.left_ : cnd.right_;
         auto &&attr = std::any_cast<RelAttr &>(c.value_);
 
-        if (attr.table_ != ss.from_list_[0]) {
+        if (!attr.table_.empty() && attr.table_ != ss.from_list_[0]) {
           LOG_WARN << "attr.table_ != ss.from_list_[0]";
           return RC::TABLE_NOT_EXISTED;
         }
@@ -110,6 +111,13 @@ public:
       stmt.values_ = std::move(is.values_);
       Operator *op = new InsertOp{std::move(stmt)};
       ((ExecStage *)(exec))->set_op(op);
+    } else if (std::holds_alternative<DropAst>(ast)) {
+      //
+      // Drop table op
+      //
+      auto &ds = const_cast<DropAst &>(std::get<DropAst>(ast));
+      Operator *op = new DropOp{std::move(ds.table_)};
+       ((ExecStage *)(exec))->set_op(op);
     }
 
     this->set_next(exec);

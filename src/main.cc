@@ -14,6 +14,15 @@
 
 bool quit = false;
 
+void exec_query(std::string query);
+
+void print_tadis() {
+  std::cout << "\033[32m"
+              << "<Tadis 0.0.3>$ "
+              << "\033[0m";
+}
+
+
 // commands=====================================================================================================================================
 // ".clear"
 void clear_terminal() {
@@ -26,7 +35,7 @@ void do_quit() {
 }
 
 // ".exec [files]"
-void read_file_and_print(const std::string& filename) {
+void rdfile_exec(const std::string& filename) {
   std::ifstream file(filename);
   if (!file.is_open()) {
     std::cerr << "Failed to open file: " << filename << std::endl;
@@ -34,7 +43,7 @@ void read_file_and_print(const std::string& filename) {
   }
   std::string line;
   while (std::getline(file, line)) {
-    std::cout << line << std::endl;
+    exec_query(std::move(line));
   }
   file.close();
 }
@@ -60,6 +69,14 @@ void print_license() {
             << "dealings in the Software." << std::endl;
 }
 
+// ".exec [filename]"
+void exec() {
+  std::cout << "Please write file's name:" << std::endl;
+  print_tadis();
+  std::string filename;
+  std::getline(std::cin, filename);
+  rdfile_exec(filename);
+}
 
 CmdExecuter cmd;
 // commands======================================================================================================
@@ -70,6 +87,7 @@ void init()
   cmd.register_cmd(".clear", clear_terminal);
   cmd.register_cmd(".quit", do_quit);
   cmd.register_cmd(".license", print_license);
+  cmd.register_cmd(".exec", exec);
 }
 
 std::string result2str(std::vector<Tuple> &ts, RC rc)
@@ -200,9 +218,7 @@ int main(int argc, char *argv[])
 
   std::string q;
   while (!quit) {
-    std::cout << "\033[32m"
-              << "<Tadis 0.0.2>$ "
-              << "\033[0m";
+    print_tadis();
     std::getline(std::cin, q);
     if (q.size() > 0 && q[0] == '.')
       handle_cmd(q);

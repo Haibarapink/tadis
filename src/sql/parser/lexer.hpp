@@ -15,7 +15,6 @@
 #include <string>
 #include <string_view>
 
-
 template <typename T>
 using LexResult = std::pair<RC, T>;
 
@@ -25,6 +24,8 @@ enum class Token {
   CREATE_T,
   DELETE_T,
   UPDATE_T,
+  DROP_T,
+
   FROM_T,
   WHERE_T,
   INTO_T,
@@ -95,6 +96,7 @@ public:
     spec_token_.emplace("UPDATE", Token::UPDATE_T);
     spec_token_.emplace("CREATE", Token::CREATE_T);
     spec_token_.emplace("DELETE", Token::DELETE_T);
+    spec_token_.emplace("DROP", Token::DROP_T);
 
     spec_token_.emplace("INTO", Token::INTO_T);
     spec_token_.emplace("FROM", Token::FROM_T);
@@ -114,6 +116,17 @@ public:
     spec_token_.emplace("VARCHAR", Token::S_VARCHAR_T);
     spec_token_.emplace("INT", Token::S_INT_T);
     spec_token_.emplace("FLOAT", Token::S_FLOAT_T);
+  }
+
+  std::string_view remain_flow()
+  {
+    std::string_view res{input_.data() + p_, input_.size() - p_};
+    return res;
+  }
+
+  bool eof()
+  {
+    return this->p_ >= input_.size();
   }
 
   LexResult<Token> next();

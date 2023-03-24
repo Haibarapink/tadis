@@ -18,6 +18,7 @@
 #include "tuple_utility.hpp"
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <string_view>
@@ -387,7 +388,7 @@ public:
     char *start{record_.data()};
     size_t len{0};
     TupleCellType t{TupleCellType::UNKNOW};
-    for (auto i = 0; i < meta_ptr_->cells_.size(); ++i) {
+    for (size_t i = 0; i < meta_ptr_->cells_.size(); ++i) {
       auto &&cell = meta_ptr_->cells_[i];
       size_t cell_len = 0;
       switch (cell.type_) {
@@ -519,7 +520,7 @@ inline void encode_num(Bytes &bytes, T t)
   static_assert(
       std::is_same<T, float>::value || std::is_same<T, long>::value, "encode2bytes only support float and long");
   char *start = reinterpret_cast<char *>(&t);
-  for (auto i = 0; i < sizeof t; ++i) {
+  for (size_t i = 0; i < sizeof t; ++i) {
     bytes.push_back(start[i]);
   }
 }
@@ -534,7 +535,7 @@ inline void encode_varchar(Bytes &bytes, const T &s)
       "encode2bytes only support float and long");
   uint32_t size = s.size();
   char *start = reinterpret_cast<char *>(&size);
-  for (auto i = 0; i < sizeof size; ++i) {
+  for (size_t i = 0; i < sizeof size; ++i) {
     bytes.push_back(start[i]);
   }
   for (auto ch : s) {
@@ -578,7 +579,7 @@ inline RC make_record(const TupleMeta &meta, const std::vector<Value> &values, R
   }
   auto &&cell_metas = meta.cells_;
   Record r;
-  for (auto i = 0; i < cell_metas.size(); ++i) {
+  for (size_t i = 0; i < cell_metas.size(); ++i) {
     // 检查类型
     auto &&cell_meta = cell_metas[i];
     auto &&value = values[i];
@@ -698,7 +699,7 @@ inline RC TupleMeta::from_json(pson::Value &v)
     return RC::JSON_DESERIALIZATION_ERROR;
   }
   auto &&cells = cells_v.as_array();
-  for (auto i = 0; i < cells.size(); ++i) {
+  for (size_t i = 0; i < cells.size(); ++i) {
     auto &&cell = cells.at(i);
     TupleCellMeta m;
     auto rc = m.from_json(cell);

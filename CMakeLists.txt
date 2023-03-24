@@ -41,9 +41,12 @@ INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/src/" SYSTEM)
 #    boost_thread
 #    boost_log_setup
 #)
-set(CMAKE_EXECUTABLE_SUFFIX ".html")
+
+# For webassamber
+#set(CMAKE_EXECUTABLE_SUFFIX ".html")
+
 ADD_EXECUTABLE(index ${PROJECT_SOURCE_DIR}/src/main.cc)
-ADD_EXECUTABLE(server ${PROJECT_SOURCE_DIR}/src/server.cc)
+#ADD_EXECUTABLE(server ${PROJECT_SOURCE_DIR}/src/server.cc)
 # Tests
 #ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/unit_tests/lex_test.cc)
 #ADD_EXECUTABLE(log_test ${PROJECT_SOURCE_DIR}/unit_tests/log_test.cc)

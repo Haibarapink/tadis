@@ -7,6 +7,7 @@
 #include "statement/select_stmt.hpp"
 #include "statement/filter_stmt.hpp"
 #include "storage/tuple.hpp"
+#include <any>
 #include <memory>
 
 class FilterOp : public Operator {
@@ -34,7 +35,8 @@ public:
         if (cnd.right_.type_ == AttrType::REL_ATTR && cnd.left_.type_ != AttrType::REL_ATTR) {
           // value : attr
           TupleCell cell;
-          auto ok = t.get_cell(p, cell);
+          RelAttr & rel_attr = std::any_cast<RelAttr&>(cnd.right_.value_);
+          auto ok = t.get_cell(rel_attr.attribute_, cell);
 
           if (!rc_success(ok))
             return ok;

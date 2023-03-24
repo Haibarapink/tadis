@@ -195,7 +195,9 @@ public:
 
   // TODO
   RC remove()
-  {}
+  {
+    return RC::SUCCESS;
+  }
 
   auto table_meta() -> TableMeta &
   {
@@ -209,7 +211,7 @@ public:
       return false;
     }
     auto &tm = table_meta_.meta_.cells_;
-    for (auto i = 0; i < values.size(); ++i) {
+    for (size_t i = 0; i < values.size(); ++i) {
       bool ok = tm[i].check(values[i].type_);
       if (!ok) {
         return ok;

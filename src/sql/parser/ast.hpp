@@ -221,4 +221,10 @@ public:
   std::vector<ColAttr> col_attrs_;
   std::string table_name_;
 };
-using QueryAst = std::variant<SelectAst, DeleteAst, InsertAst, CreateTableAst>;
+
+class DropAst {
+public:
+  std::string table_;
+};
+
+using QueryAst = std::variant<SelectAst, DeleteAst, InsertAst, CreateTableAst, DropAst>;

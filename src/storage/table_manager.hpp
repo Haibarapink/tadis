@@ -61,7 +61,19 @@ public:
 
   RC create_table(const std::string &table_name, TableMeta meta);
 
-  // RC remove_table(std::string_view table_name);
+  RC drop_table(const std::string &table_name)
+  {
+    auto iter = tables_.find(table_name);
+    if (iter == tables_.end()) {
+      return RC::TABLE_NOT_EXISTED;
+    }
+    auto db_name = make_data_filename(this->base_dir_, table_name);
+    auto meta_name = make_meta_filename(this->base_dir_, table_name);
+    std::filesystem::remove(std::filesystem::path{db_name});
+    std::filesystem::remove(std::filesystem::path{meta_name});
+    tables_.erase(iter);
+    return RC::SUCCESS;
+  }
 
   // make sure use contain(...) first!
   Table *table(const std::string &name)

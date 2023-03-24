@@ -14,6 +14,7 @@
 #include "sql/parser/lexer.hpp"
 #include "sql/parser/ast.hpp"
 
+#include <any>
 #include <cmath>
 #include <variant>
 #include <vector>
@@ -54,6 +55,8 @@ private:
   RC parse_create_table();
   // RC parse_create_index();
 
+  RC parse_drop();
+
 private:
   Lexer<InputType> lexer_;
   QueryAst query_;
@@ -78,6 +81,10 @@ RC Parser<InputType>::parse()
     case Token::INSERT_T: {
       return parse_insert();
     }
+
+    case Token::DROP_T: {
+      return parse_drop();
+    }
     default: {
       LOG_DEBUG << "Undefined token";
       return RC::SYNTAX_ERROR;
@@ -92,7 +99,7 @@ RC Parser<InputType>::parse_select()
   assert(token == Token::SELECT_T && rc == RC::SUCCESS);
 
   query_ = SelectAst{};
-  auto &&select = std::get<SelectAst>(query_);
+  auto &select = std::get<SelectAst>(query_);
   if (rc = parse_attrs(select.selist_); rc != RC::SUCCESS) {
     LOG_DEBUG << "FAIL";
     return rc;
@@ -195,6 +202,9 @@ RC Parser<InputType>::parse_values(std::vector<Value> &values)
   while (true) {
     Value v;
     auto rc = parse_value(v);
+    if (!rc_success(rc)) {
+      return rc;
+    }
     if (v.type_ == AttrType::REL_ATTR || v.type_ == AttrType::UNDEFINED) {
       return RC::SYNTAX_ERROR;
     }
@@ -300,6 +310,8 @@ RC Parser<InputType>::parse_value(Value &v)
         return rc2;
       }
       attr.attribute_ = std::move(lexer_.template cur_ref<std::string>());
+    } else {
+      attr.attribute_ = std::move(attr.table_);
     }
     LOG_DEBUG << std::any_cast<RelAttr>(v.value_).table_ << "." << std::any_cast<RelAttr>(v.value_).attribute_;
   } else {
@@ -319,6 +331,8 @@ RC Parser<InputType>::parse_value(Value &v)
       case Token::NULL_T:
         v.type_ = AttrType::NULL_A;
         break;
+      default:
+        assert(false);
     }
   }
 
@@ -548,4 +562,42 @@ RC Parser<InputType>::parse_col_data_type(ColAttr &c)
   }
 
   return RC::SUCCESS;
+}
+
+template <typename InputType>
+RC Parser<InputType>::parse_drop()
+{
+  DropAst ds;
+  {
+    auto [rc, tk] = lexer_.next();
+    if (!rc_success(rc) || tk != Token::DROP_T) {
+      return rc;
+    }
+  }
+
+  {
+    auto [rc, tk] = lexer_.next();
+    if (!rc_success(rc) || tk != Token::TABLE_T) {
+      return rc;
+    }
+  }
+
+  {
+    auto [rc, tk] = lexer_.next();
+    if (!rc_success(rc) || tk != Token::ID_T) {
+      return rc;
+    }
+    ds.table_ = std::move(std::any_cast<std::string&>(lexer_.cur_any_ref()));
+  }
+
+  query_ = std::move(ds);
+
+  {
+    auto [rc, tk] = lexer_.next();
+    if (rc_success(rc) && tk == Token::COLON_T) {
+      return RC::SUCCESS;
+    }
+  }
+
+  return RC::SYNTAX_ERROR;
 }
