@@ -3,6 +3,7 @@
 #include <cassert>
 #include <utility>
 #include <variant>
+#include <string>
 
 template <typename T, typename Error>
 class Expect {
@@ -17,18 +18,21 @@ public:
 
   Expect(T t) : inter_(std::move(t))
   {}
-  Expect(Error e) : inter_(e)
+  Expect(Error e, std::string msg = "") : inter_(e), msg_(msg)
   {}
 
   Expect(const Expect &other) : inter_(other.inter_)
   {}
+
   Expect &operator=(const Expect &other)
   {
     inter_ = other.inter_;
     return *this;
   }
+
   Expect(Expect &&other) : inter_(std::move(other.inter_))
   {}
+
   Expect &operator=(Expect &&other)
   {
     inter_ = std::move(other.inter_);
@@ -55,6 +59,11 @@ public:
     return std::get<Error>(inter_);
   }
 
+  const std::string msg() const
+  {
+    return msg_;
+  }
+
   T take_T()
   {
     if (!std::holds_alternative<T>(inter_)) {
@@ -66,4 +75,5 @@ public:
 
 private:
   std::variant<T, Error> inter_;
+  std::string msg_;
 };

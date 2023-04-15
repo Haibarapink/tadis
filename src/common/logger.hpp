@@ -1,83 +1,57 @@
-/*
- * @Author: pink haibarapink@gmail.com
- * @Date: 2023-01-05 19:39:35
- * @LastEditors: pink haibarapink@gmail.com
- * @LastEditTime: 2023-01-15 00:24:11
- * @FilePath: /tadis/src/common/logger.hpp
- * @Description: A logger that was writen very simple.
- */
 #pragma once
 
-#include <thread>
-#include <string>
-#include <fstream>
-#include <sstream>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <thread>
 
-class LogRecord
-{
+// cmake open debug
+#ifdef DEBUG
+#define LOG_OPEN 1
+#endif
+
+namespace logger {
+
+class LogRecord {
 public:
   friend class Logger;
+  LogRecord() = default;
+  ~LogRecord();
 
+#ifdef LOG_OPEN
   LogRecord(std::string_view loglevel)
   {
-    ss_ << "[" << loglevel << "]" ;
+    ss_ << "[" << loglevel << "]";
+  }
+  template <typename T>
+  auto operator<<(T t) -> LogRecord &
+  {
+    ss_ << t;
+    return *this;
   }
 
-  auto ss() -> std::stringstream &{
-    return ss_;
-  }
-
-  ~LogRecord();
-private:
   std::stringstream ss_;
+#else
+  LogRecord(std::string_view loglevel)
+  {}
+  template <typename T>
+  auto operator<<(T t) -> LogRecord &
+  {
+    return *this;
+  }
+#endif
 };
 
-class Logger
+inline LogRecord::~LogRecord()
 {
-public:
-  Logger() = default;
-  ~Logger() {
-    fs_.flush();
-  }
-
-  void init(std::string_view filename)
-  {
-    fs_.open(filename.data(), std::ios::out | std::ios::app);
-  }
-
-  void write_record(LogRecord& rec)
-  {
-    fs_ << rec.ss_.str() << "\n";
-  }
-
-  static Logger& logger()
-  {
-    if (!l.fs_.is_open()) {
-      l.init("default.log");
-    }
-    return l;
-  }
-
-  static void init_logger(std::string_view filename)
-  {
-    Logger::l.init(filename);
-  }
-private:
-  static Logger l;
-  std::fstream fs_;
-};
-
-Logger Logger::l;
-
-LogRecord::~LogRecord() {
-  auto && logger = Logger::logger();
-  logger.write_record(*this);
+#ifdef LOG_OPEN
+  std::cout << ss_.str() << std::endl;
+#endif
 }
 
-#define LOG(level) LogRecord(level).ss() << "[" << __FILE__ << ":" << __LINE__<< "]"
-#define LOG_DEBUG \
-            LOG("DEBUG")
-#define LOG_WARN \
-            LOG("WARN")
-
+#define LOG(level) logger::LogRecord(level) << "[" << __FILE__ << ":" << __LINE__ << "]"
+#define LOG_DEBUG LOG("DEBUG")
+#define LOG_WARN LOG("WARN")
+}  // namespace logger

@@ -26,8 +26,8 @@ public:
   std::string attribute_;
 };
 
-enum class CondOp {
-  UNDEFINED,
+enum class CondOp : int {
+  UNDEFINED = 0,
   NOT_EQ,   // <>
   EQ,       // =
   GREATER,  // >
@@ -64,6 +64,40 @@ enum class AttrType { UNDEFINED, REL_ATTR, STRING, INTS, FLOATS, NULL_A, QUERY }
 
 class Value {
 public:
+  Value() = default;
+  ~Value() = default;
+  Value(const Value &v) : value_(v.value_), type_(v.type_)
+  {}
+  Value &operator=(const Value &v)
+  {
+    value_ = v.value_;
+    type_ = v.type_;
+    return *this;
+  }
+  Value(Value &&v) : value_(std::move(v.value_)), type_(v.type_)
+  {
+    v.type_ = AttrType::UNDEFINED;
+  }
+  Value &operator=(Value &&v)
+  {
+    value_ = std::move(v.value_);
+    type_ = v.type_;
+    v.type_ = AttrType::UNDEFINED;
+    return *this;
+  }
+
+  template <typename T>
+  Value& operator=(T t) {
+    init(t);
+    return *this;
+  }
+
+  template <typename T>
+  void init(T t)
+  {
+    assert(false && "not implemented");
+  }
+
   template <typename T>
   void init(T v, AttrType t)
   {
@@ -71,8 +105,57 @@ public:
     type_ = t;
   }
 
+  int compare(Value &v)
+  {
+    assert(type_ == v.type_);
+    int res = 0;
+
+    switch (v.type_) {
+      case AttrType::INTS:
+        res = get<int>() - v.get<int>();
+        break;
+      case AttrType::FLOATS:
+        res = get<float>() - v.get<float>();
+        break;
+      case AttrType::STRING:
+        res = get<std::string>().compare(v.get<std::string>());
+        break;
+      default:
+        assert(false && "not implemented");
+    }
+
+    return res;
+  }
+
+  std::string to_string()
+  {
+    switch (type_) {
+      case AttrType::REL_ATTR:
+        return get<RelAttr>().table_ + "." + get<RelAttr>().attribute_;
+      case AttrType::STRING:
+        return get<std::string>();
+      case AttrType::INTS:
+        return std::to_string(get<int>());
+      case AttrType::FLOATS:
+        return std::to_string(get<float>());
+      case AttrType::NULL_A:
+        return "null";
+      case AttrType::QUERY:
+        // TODO
+        return get<std::string>();
+      default:
+        return "";
+    }
+  }
+
   template <typename T>
   T get()
+  {
+    return std::any_cast<T>(value_);
+  }
+
+  template <typename T>
+  T &get_ref()
   {
     return std::any_cast<T>(value_);
   }
@@ -84,32 +167,68 @@ public:
 
   std::any value_;
   AttrType type_ = AttrType::UNDEFINED;
-
-  Value() = default;
-  ~Value() = default;
-  Value(const Value &v) : value_(v.value_), type_(v.type_)
-  {}
-
-  Value &operator=(const Value &v)
-  {
-    value_ = v.value_;
-    type_ = v.type_;
-    return *this;
-  }
-
-  Value(Value &&v) : value_(std::move(v.value_)), type_(v.type_)
-  {
-    v.type_ = AttrType::UNDEFINED;
-  }
-
-  Value &operator=(Value &&v)
-  {
-    value_ = std::move(v.value_);
-    type_ = v.type_;
-    v.type_ = AttrType::UNDEFINED;
-    return *this;
-  }
 };
+
+template <>
+inline void Value::init(int n)
+{
+  init(n, AttrType::INTS);
+}
+
+template <>
+inline void Value::init(float n)
+{
+  init(n, AttrType::FLOATS);
+}
+
+template <>
+inline void Value::init(const char *str)
+{
+  init(std::string(str), AttrType::STRING);
+}
+
+template <>
+inline void Value::init(std::string v)
+{
+  init(std::move(v), AttrType::STRING);
+}
+
+template <>
+inline void Value::init(std::string_view v)
+{
+  init(std::string(v), AttrType::STRING);
+}
+
+template <>
+inline void Value::init(RelAttr r)
+{
+  init(std::move(r), AttrType::REL_ATTR);
+}
+
+// anonymous
+namespace {
+template <typename... Args>
+inline void init_values(std::vector<Value> &vals, Args... args)
+{}
+
+template <typename T, typename... Args>
+inline void init_values(std::vector<Value> &vals, T t, Args... args)
+{
+  Value v;
+  v.init(t);
+  vals.push_back(std::move(v));
+  init_values(vals, args...);
+}
+}  // namespace
+
+template <typename... Args>
+inline std::vector<Value> init_values(Args... args)
+{
+  std::vector<Value> res;
+  init_values(res, args...);
+  return res;
+}
+
 
 class Condition {
 public:
@@ -146,7 +265,7 @@ public:
   }
 };
 
-class SelectAst {
+class SelectStmt {
 public:
   // select list
   std::vector<RelAttr> selist_;
@@ -159,13 +278,13 @@ public:
 // DELETE FROM 表名称 WHERE 列名称 = 值
 // DELETE FROM 表
 // DELETE * FRRM 表
-class DeleteAst {
+class DeleteStmt {
 public:
   std::vector<std::string> tables_;
   std::vector<Condition> conds_;
 };
 
-class InsertAst {
+class InsertStmt {
 public:
   std::string table_name_;
   std::vector<std::string> cols_;
@@ -216,15 +335,79 @@ public:
 // City varchar(255)
 // )
 // 支持类型: float, int, char, varchar
-class CreateTableAst {
+class CreateTableStmt {
 public:
   std::vector<ColAttr> col_attrs_;
   std::string table_name_;
 };
 
-class DropAst {
+class DropStmt {
 public:
   std::string table_;
 };
 
-using QueryAst = std::variant<SelectAst, DeleteAst, InsertAst, CreateTableAst, DropAst>;
+using QueryStmt = std::variant<SelectStmt, DeleteStmt, InsertStmt, CreateTableStmt, DropStmt>;
+enum class QueryType : int { SELECT, INSERT, DELETE, CREATE, DROP };
+class SqlStmt {
+public:
+  SqlStmt(QueryStmt q) : q_(std::move(q))
+  {
+    if (is_select()) {
+      type_ = QueryType::SELECT;
+    } else if (is_insert()) {
+      type_ = QueryType::INSERT;
+    } else if (is_delete()) {
+      type_ = QueryType::DELETE;
+    } else if (is_create_table()) {
+      type_ = QueryType::CREATE;
+    } else if (is_drop()) {
+      type_ = QueryType::DROP;
+    }
+  }
+
+  QueryType type() const
+  {
+    return type_;
+  }
+
+  bool where_is_vaild()
+  {
+    auto &select_stmt = stmt<SelectStmt>();
+    return !select_stmt.cond_list_.empty();
+  }
+
+  template <typename Stmt>
+  Stmt &stmt()
+  {
+    return std::get<Stmt>(q_);
+  }
+
+  bool is_select() const
+  {
+    return std::holds_alternative<SelectStmt>(q_);
+  }
+
+  bool is_create_table() const
+  {
+    return std::holds_alternative<CreateTableStmt>(q_);
+  }
+
+  bool is_insert() const
+  {
+    return std::holds_alternative<InsertStmt>(q_);
+  }
+
+  bool is_delete() const
+  {
+    return std::holds_alternative<DeleteStmt>(q_);
+  }
+
+  bool is_drop() const
+  {
+    return std::holds_alternative<DropStmt>(q_);
+  }
+
+private:
+  QueryStmt q_;
+  QueryType type_;
+};

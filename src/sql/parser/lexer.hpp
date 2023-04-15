@@ -111,7 +111,7 @@ public:
     spec_token_.emplace("NULL", Token::NULL_T);
     spec_token_.emplace("NULLABLE", Token::NULLABLE_T);
 
-    // For sql data types
+    // For sql bytes types
     spec_token_.emplace("CHAR", Token::S_CHAR_T);
     spec_token_.emplace("VARCHAR", Token::S_VARCHAR_T);
     spec_token_.emplace("INT", Token::S_INT_T);
@@ -120,7 +120,7 @@ public:
 
   std::string_view remain_flow()
   {
-    std::string_view res{input_.data() + p_, input_.size() - p_};
+    std::string_view res{input_.bytes() + p_, input_.size() - p_};
     return res;
   }
 

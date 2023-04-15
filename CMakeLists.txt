@@ -29,7 +29,6 @@ IF(DEBUG)
     MESSAGE("DEBUG has been set as TRUE")
     ADD_DEFINITIONS(-DENABLE_DEBUG)
 ENDIF()
-
 ## For logger
 #ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK=1)
 
@@ -38,99 +37,14 @@ SET(CMAKE_C_FLAGS ${CMAKE_COMMON_FLAGS})
 MESSAGE("CMAKE_CXX_FLAGS is " ${CMAKE_CXX_FLAGS})
 INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/src/" SYSTEM)
 
-# ADD_EXECUTABLE(tadis ${PROJECT_SOURCE_DIR}/src/main.cc)
-#TARGET_LINK_LIBRARIES(tadis PRIVATE
-#    pthread
-#    boost_log
-#    boost_thread
-#    boost_log_setup
-#)
+add_executable(server src/bin/server.cc)
 
-# For webassamber
-#set(CMAKE_EXECUTABLE_SUFFIX ".html")
-
-ADD_EXECUTABLE(main ${PROJECT_SOURCE_DIR}/src/main.cc)
-
-
-#ADD_EXECUTABLE(server ${PROJECT_SOURCE_DIR}/src/server.cc)
-# Tests
-#ADD_EXECUTABLE(lex_test ${PROJECT_SOURCE_DIR}/unit_tests/lex_test.cc)
-#ADD_EXECUTABLE(log_test ${PROJECT_SOURCE_DIR}/unit_tests/log_test.cc)
-#ADD_EXECUTABLE(parse_test ${PROJECT_SOURCE_DIR}/unit_tests/parse_test.cc)
-#ADD_EXECUTABLE(mem_store_test ${PROJECT_SOURCE_DIR}/unit_tests/memory_storage_test.cc)
-#ADD_EXECUTABLE(tuple_test ${PROJECT_SOURCE_DIR}/unit_tests/tuple_test.cc)
-#ADD_EXECUTABLE(json_test ${PROJECT_SOURCE_DIR}/unit_tests/json_test.cc)
-#ADD_EXECUTABLE(utility_test ${PROJECT_SOURCE_DIR}/unit_tests/utility_test.cc)
-#ADD_EXECUTABLE(rex_test ${PROJECT_SOURCE_DIR}/unit_tests/rex_test.cc)
-#ADD_EXECUTABLE(lru_test ${PROJECT_SOURCE_DIR}/unit_tests/lru_test.cc)
-#ADD_EXECUTABLE(disk_test ${PROJECT_SOURCE_DIR}/unit_tests/disk_manager_test.cc)
-#ADD_EXECUTABLE(bitmap_test ${PROJECT_SOURCE_DIR}/unit_tests/bitmap_test.cc)
-#ADD_EXECUTABLE(bfp_test ${PROJECT_SOURCE_DIR}/unit_tests/bfp_test.cc)
-#ADD_EXECUTABLE(record_test ${PROJECT_SOURCE_DIR}/unit_tests/record_test.cc)
-#ADD_EXECUTABLE(table_test ${PROJECT_SOURCE_DIR}/unit_tests/table_test.cc)
-## tests config
-#TARGET_LINK_LIBRARIES(log_test PRIVATE
-#pthread
-#boost_log
-#boost_thread
-#boost_log_setup
-#)
-#
-#TARGET_LINK_LIBRARIES(parse_test PRIVATE
-#    pthread
-#    boost_log
-#    boost_thread
-#    boost_log_setup
-#)
-#
-#TARGET_LINK_LIBRARIES(tuple_test PRIVATE
-#    pthread
-#    boost_log
-#    boost_thread
-#    boost_log_setup
-#)
-#
-#TARGET_LINK_LIBRARIES(json_test PRIVATE
-#    pthread
-#    boost_log
-#    boost_thread
-#    boost_log_setup
-#)
-#
-#
-#TARGET_LINK_LIBRARIES(disk_test PRIVATE
-#    pthread
-#    boost_log
-#    boost_thread
-#    boost_log_setup
-#)
-#
-#TARGET_LINK_LIBRARIES(bfp_test PRIVATE
-#    pthread
-#    boost_log
-#    boost_thread
-#    boost_log_setup
-#)
-#
-#TARGET_LINK_LIBRARIES(record_test PRIVATE
-#    pthread
-#    boost_log
-#    boost_thread
-#    boost_log_setup
-#)
-#
-#TARGET_LINK_LIBRARIES(table_test PRIVATE
-#    pthread
-#    boost_log
-#    boost_thread
-#    boost_log_setup
-#)
-#
-#
-## unit tests
-#ENABLE_TESTING()
-#ADD_TEST(
-#    NAME boost_test
-#    COMMAND $<TARGET_FILE:lex_test> $<TARGET_FILE:log_test> $<TARGET_FILE:parse_test>
-#)
-
+add_executable(stmt_test unit_test/stmt_test.cc)
+add_executable(tuple_test unit_test/tuple_test.cc)
+add_executable(buffer_pool_remove_test unit_test/table_heap_test.cc)
+add_executable(json_test unit_test/json_test.cc)
+add_executable(comparsion_expression_test unit_test/comparsion_expression_test.cc)
+add_executable(seq_exec_test unit_test/seq_exec_test.cc)
+add_executable(filter_expression_test unit_test/filter_expression_test.cc)
+add_executable(projection_executer_test unit_test/projection_executer_test.cc)
+add_executable(bind_test unit_test/bind_test.cc)

@@ -25,9 +25,9 @@ public:
   Parser(InputType input) : lexer_(input)
   {}
 
-  RC parse();
+  RC do_parse();
 
-  const QueryAst &query()
+  const QueryStmt &query()
   {
     return query_;
   }
@@ -59,11 +59,11 @@ private:
 
 private:
   Lexer<InputType> lexer_;
-  QueryAst query_;
+  QueryStmt query_;
 };
 
 template <typename InputType>
-RC Parser<InputType>::parse()
+RC Parser<InputType>::do_parse()
 {
   auto [rc, tk] = lexer_.peek();
   switch (tk) {
@@ -98,8 +98,8 @@ RC Parser<InputType>::parse_select()
   auto [rc, token] = lexer_.next();
   assert(token == Token::SELECT_T && rc == RC::SUCCESS);
 
-  query_ = SelectAst{};
-  auto &select = std::get<SelectAst>(query_);
+  query_ = SelectStmt{};
+  auto &select = std::get<SelectStmt>(query_);
   if (rc = parse_attrs(select.selist_); rc != RC::SUCCESS) {
     LOG_DEBUG << "FAIL";
     return rc;
@@ -350,7 +350,7 @@ RC Parser<InputType>::parse_delete()
     return rc;
   }
 
-  DeleteAst d;
+  DeleteStmt d;
 
   auto [rc2, tk2] = lexer_.next_if(Token::STAR_T);
   if (rc = parse_from(d.tables_); rc != RC::SUCCESS) {
@@ -378,7 +378,7 @@ RC Parser<InputType>::parse_delete()
 template <typename InputType>
 RC Parser<InputType>::parse_insert()
 {
-  InsertAst insert;
+  InsertStmt insert;
   if (lexer_.next_if(Token::INSERT_T).first != RC::SUCCESS) {
     LOG_DEBUG << "it is not insert query";
     return RC::SYNTAX_ERROR;
@@ -475,7 +475,7 @@ RC Parser<InputType>::parse_create_table()
     LOG_DEBUG << "miss 'TABLE'";
     return RC::SYNTAX_ERROR;
   }
-  CreateTableAst create_table;
+  CreateTableStmt create_table;
   if (!rc_success(lexer_.next_if(Token::ID_T).first)) {
     LOG_DEBUG << "miss table's name";
     return RC::SYNTAX_ERROR;
@@ -567,7 +567,7 @@ RC Parser<InputType>::parse_col_data_type(ColAttr &c)
 template <typename InputType>
 RC Parser<InputType>::parse_drop()
 {
-  DropAst ds;
+  DropStmt ds;
   {
     auto [rc, tk] = lexer_.next();
     if (!rc_success(rc) || tk != Token::DROP_T) {
@@ -587,7 +587,7 @@ RC Parser<InputType>::parse_drop()
     if (!rc_success(rc) || tk != Token::ID_T) {
       return rc;
     }
-    ds.table_ = std::move(std::any_cast<std::string&>(lexer_.cur_any_ref()));
+    ds.table_ = std::move(std::any_cast<std::string &>(lexer_.cur_any_ref()));
   }
 
   query_ = std::move(ds);
