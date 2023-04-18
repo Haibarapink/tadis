@@ -70,7 +70,9 @@ public:
     return schema_;
   }
 
-  auto name() const -> const std::string& {}
+  auto name() const -> const std::string& {
+    return table_name_;
+  }
 
 private:
   std::string table_name_;

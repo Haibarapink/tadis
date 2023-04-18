@@ -53,7 +53,7 @@ public:
 
   Value value_at(Schema *schema, size_t idx)
   {
-    assert(schema && idx < schema->columns().size() && !data_.empty());
+    assert(schema && idx < schema->columns().size());
     Value res;
     auto &columns = schema->columns();
     auto data = data_.data();
@@ -138,6 +138,7 @@ private:
 
 inline Tuple Tuple::create_tuple(const std::vector<Value> &vals, Schema *schema)
 {
+  assert(schema);
   std::vector<char> record;
   size_t idx = 0;
   for (auto &v : vals) {
@@ -160,7 +161,7 @@ inline Tuple Tuple::create_tuple(const std::vector<Value> &vals, Schema *schema)
 
     switch (v.type_) {
       case AttrType::INTS: {
-        int n = std::any_cast<int>(v.value_);
+        int n = std::any_cast<long>(v.value_);
         record.insert(record.end(), (char *)&n, (char *)&n + sizeof(int));
         break;
       }

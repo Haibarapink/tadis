@@ -19,7 +19,6 @@
 // <Query> ::= SELECT <SelList> FROM <FromList> WHERE <Condition>
 // <SelList> ::= <Attribute> , SelList>
 // <SelList> ::= <Attribute>
-
 class RelAttr {
 public:
   std::string table_;
@@ -87,7 +86,8 @@ public:
   }
 
   template <typename T>
-  Value& operator=(T t) {
+  Value &operator=(T t)
+  {
     init(t);
     return *this;
   }
@@ -112,7 +112,7 @@ public:
 
     switch (v.type_) {
       case AttrType::INTS:
-        res = get<int>() - v.get<int>();
+        res = get<long>() - v.get<long>();
         break;
       case AttrType::FLOATS:
         res = get<float>() - v.get<float>();
@@ -135,7 +135,7 @@ public:
       case AttrType::STRING:
         return get<std::string>();
       case AttrType::INTS:
-        return std::to_string(get<int>());
+        return std::to_string(get<long>());
       case AttrType::FLOATS:
         return std::to_string(get<float>());
       case AttrType::NULL_A:
@@ -172,7 +172,7 @@ public:
 template <>
 inline void Value::init(int n)
 {
-  init(n, AttrType::INTS);
+  init((long)n, AttrType::INTS);
 }
 
 template <>
@@ -228,7 +228,6 @@ inline std::vector<Value> init_values(Args... args)
   init_values(res, args...);
   return res;
 }
-
 
 class Condition {
 public:
@@ -411,3 +410,5 @@ private:
   QueryStmt q_;
   QueryType type_;
 };
+
+using IntType = long;

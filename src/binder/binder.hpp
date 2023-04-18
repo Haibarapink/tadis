@@ -72,6 +72,7 @@ private:
       if (!where_list.empty()) {
         filter_exec = filter_executer(table, where_list);
         filter_exec->children_[0].reset(scan_exec);
+        filter_exec->schema_.reset(new Schema{t->schema()});
       }
 
       // out put
@@ -96,6 +97,7 @@ private:
       Schema* output_schema = new Schema{Schema::copy_schema(&t->schema(), output_schema_idx)};
       ProjectionExpression* pj_expr = new ProjectionExpression{std::move(cvs)};
       executer = new ProjecetionExecuter{};
+      executer->schema_.reset(new Schema{*output_schema});
       executer->expression_ = std::unique_ptr<Expression>{pj_expr};
       ctx_->result_.output_schema_.reset(output_schema);
 
@@ -129,7 +131,7 @@ private:
           RelAttr a = std::any_cast<RelAttr>(cnd.right_.value_);
           right  = col_value_express(t, a.attribute_);
         } else {
-          right = constant_express(cnd.left_);
+          right = constant_express(cnd.right_);
         }
         ComparsionType type;
         assert(convert(cnd.op_, type));

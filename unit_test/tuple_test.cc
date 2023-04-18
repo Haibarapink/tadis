@@ -6,7 +6,6 @@
 
 PURE_TEST_INIT();
 
-
 void vpv_test()
 {
   std::vector<Column> cols;
@@ -24,7 +23,7 @@ void vpv_test()
   auto tuple = Tuple::create_tuple(values, &schema);
 
   auto v = tuple.value_at(&schema, 0);
-  pure_assert(v.get<int>() == 1) << v.get<int>();
+  pure_assert(v.get<long>() == 1) << v.get<long>();
 
   v = tuple.value_at(&schema, 1);
   pure_assert(v.get<float>() == 2.3f) << v.get<float>();
@@ -53,7 +52,7 @@ void varchar_test()
   auto tuple = Tuple::create_tuple(values, &schema);
 
   auto v = tuple.value_at(&schema, 0);
-  pure_assert(v.get<int>() == 1) << v.get<int>();
+  pure_assert(v.get<long>() == 1) << v.get<long>();
 
   v = tuple.value_at(&schema, 1);
   pure_assert(v.get<float>() == 2.3f) << v.get<float>();
@@ -72,7 +71,7 @@ void varchar2_test()
   cols.push_back(Column(ColumnType::INT, "id2", sizeof(int)));
   cols.push_back(Column(ColumnType::VARCHAR, "name", 0));
 
-  auto values = init_values(1, 2.3f, 2,"helloworld and duck");
+  auto values = init_values(1, 2.3f, 2, "helloworld and duck");
   pure_assert(values[0].type_ == AttrType::INTS);
   pure_assert(values[1].type_ == AttrType::FLOATS);
   pure_assert(values[2].type_ == AttrType::INTS);
@@ -82,7 +81,7 @@ void varchar2_test()
   auto tuple = Tuple::create_tuple(values, &schema);
 
   auto v = tuple.value_at(&schema, 0);
-  pure_assert(v.get<int>() == 1) << v.get<int>();
+  pure_assert(v.get<long>() == 1) << v.get<long>();
 
   v = tuple.value_at(&schema, 1);
   pure_assert(v.get<float>() == 2.3f) << v.get<float>();
