@@ -21,6 +21,7 @@ enum class RC : int {
   FETCH_PAGE_ERROR,
   RECORD_TOO_LARGE,
   AMBIGUOUS_COLUMN_NAME,
+  COLUMN_TYPE_MISMATCH,
   SUCCESS,
 };
 
@@ -49,7 +50,8 @@ static std::string_view rc2str(RC rc)
         {RC::TABLE_NOT_EXISTED, "Table is not existed"},
         {RC::FETCH_PAGE_ERROR, "Fetch page error"},
         {RC::RECORD_TOO_LARGE, "Record is too large"},
-        {RC::AMBIGUOUS_COLUMN_NAME, "Ambiguous column name"}};
+        {RC::AMBIGUOUS_COLUMN_NAME, "Ambiguous column name"},
+        { RC::COLUMN_TYPE_MISMATCH, "Column type mismatch"}};
   }
   return strs[rc];
 }

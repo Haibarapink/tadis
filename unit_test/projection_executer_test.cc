@@ -55,7 +55,7 @@ void basic_test() {
 
   Tuple * t = new Tuple{{}};
   RC  rc = project.next(t);
-  std::cout << t->to_string(schema);
+  std::cout << t->to_string(project.schema_.get());
 
   remove("test.db");
 }

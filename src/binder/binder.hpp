@@ -26,7 +26,7 @@ public:
     Executer *bind(SqlStmt *stmt);
 private:
     Executer* error_executer(RC rc,  std::string msg = "", QueryType type = QueryType::SELECT) {
-      Executer* error_exec = new ErrorExecuter{rc};
+      Executer* error_exec = new ErrorExecuter{rc, &ctx_->result_};
       ctx_->result_.msg_ = std::move(msg);
       ctx_->result_.rc_ = rc;
       ctx_->result_.type_ = type;
@@ -34,6 +34,8 @@ private:
     }
 
     Executer* bind_select(SqlStmt* select_stmt) {
+      assert(ctx_);
+      ctx_->result_.type_ = QueryType::SELECT;
       auto& stmt = select_stmt->stmt<SelectStmt>();
       auto& select_list = stmt.selist_;
       auto& where_list = stmt.cond_list_;
@@ -161,29 +163,50 @@ private:
     }
 
     Executer* bind_insert(SqlStmt* insert_stmt) {
+      ctx_->result_.type_ = QueryType::INSERT;
       auto& insert = insert_stmt->stmt<InsertStmt>();
       auto catalog = ctx_->catalog();
       auto table = catalog->get_table(insert.table_name_);
+
       if (table == nullptr) {
         return error_executer(RC::TABLE_NOT_EXISTED, "", QueryType::INSERT);
       }
 
       auto stm = catalog->store_manager();
 
-      Executer* executer = new InsertExecuter{stm, table, &table->schema(), std::move(insert.values_)};
+      // check columns' type
+      auto& schema = table->schema();
 
+      if (insert.values_.size() != schema.columns_.size()) {
+        return error_executer(RC::COLUMN_TYPE_MISMATCH, "", QueryType::INSERT);
+      }
+
+      for (auto i = 0 ; i < schema.columns_.size(); ++i) {
+        // check type
+        auto& col = schema.columns_.at(i);
+        auto& val = insert.values_.at(i);
+        if (!check_attr_type(val.type_, col.type())) {
+          return error_executer(RC::COLUMN_TYPE_MISMATCH, "", QueryType::INSERT);
+        }
+      }
+
+      Executer* executer = new InsertExecuter{stm, table, &table->schema(), std::move(insert.values_)};
+ 
       return executer;
     }
 
     Executer* bind_delete(SqlStmt* delete_stmt) {
+      ctx_->result_.type_ = QueryType::DELETE;
       return error_executer(RC::SYNTAX_ERROR, "", QueryType::DELETE);
     }
 
     Executer* bind_drop(SqlStmt* drop_stmt) {
+      ctx_->result_.type_ = QueryType::DROP;
       return error_executer(RC::SYNTAX_ERROR, "", QueryType::DROP);
     }
 
     Executer* bind_create(SqlStmt* create_stmt) {
+      ctx_->result_.type_ = QueryType::CREATE;
       auto catalog = ctx_->catalog();
       auto& create_table = create_stmt->stmt<CreateTableStmt>();
       if (catalog->has_table(create_table.table_name_)) {

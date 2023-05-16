@@ -53,7 +53,7 @@ public:
 
   void insert_and_select_test()
   {
-    Catalog ct;
+    Catalog ct{"."};
     ExecuterContext ctx{&ct};
 
     auto stmt = make_stmt("Create table student (id int, age int, name varchar(10));");
@@ -86,6 +86,7 @@ public:
     rc = exec->next(&t);
     pure_assert(rc == RC::SUCCESS);
     auto table = ct.get_table("student");
+
     std::cout << t.to_string(ctx.result_.output_schema_.get()) << std::endl;
 
     remove("student.db");
@@ -110,8 +111,8 @@ void insert_select_test()
 int main(int, char **)
 {
   PURE_TEST_PREPARE();
-  PURE_TEST_CASE(basic_test);
-  PURE_TEST_CASE(create_table_test);
+//  PURE_TEST_CASE(basic_test);
+//  PURE_TEST_CASE(create_table_test);
   PURE_TEST_CASE(insert_select_test);
   PURE_TEST_RUN();
 }

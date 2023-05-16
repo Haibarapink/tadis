@@ -72,7 +72,6 @@ private:
   bool stop;
 };
 
-// the constructor just launches some amount of workers
 inline ThreadPool::ThreadPool(size_t threads) : stop(false)
 {
   for (size_t i = 0; i < threads; ++i)
@@ -94,7 +93,6 @@ inline ThreadPool::ThreadPool(size_t threads) : stop(false)
     });
 }
 
-// add new work item to the pool
 template <class F, class... Args>
 auto ThreadPool::enqueue(F &&f, Args &&...args) -> std::future<typename std::result_of<F(Args...)>::type>
 {
@@ -107,7 +105,6 @@ auto ThreadPool::enqueue(F &&f, Args &&...args) -> std::future<typename std::res
   {
     std::unique_lock<std::mutex> lock(queue_mutex);
 
-    // don't allow enqueueing after stopping the pool
     if (stop)
       throw std::runtime_error("enqueue on stopped ThreadPool");
 
@@ -117,7 +114,6 @@ auto ThreadPool::enqueue(F &&f, Args &&...args) -> std::future<typename std::res
   return res;
 }
 
-// the destructor joins all threads
 inline ThreadPool::~ThreadPool()
 {
   {

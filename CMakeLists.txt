@@ -37,7 +37,6 @@ SET(CMAKE_C_FLAGS ${CMAKE_COMMON_FLAGS})
 MESSAGE("CMAKE_CXX_FLAGS is " ${CMAKE_CXX_FLAGS})
 INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/src/" SYSTEM)
 
-add_executable(server src/bin/server.cc)
 
 add_executable(stmt_test unit_test/stmt_test.cc)
 add_executable(tuple_test unit_test/tuple_test.cc)
@@ -48,3 +47,6 @@ add_executable(seq_exec_test unit_test/seq_exec_test.cc)
 add_executable(filter_expression_test unit_test/filter_expression_test.cc)
 add_executable(projection_executer_test unit_test/projection_executer_test.cc)
 add_executable(bind_test unit_test/bind_test.cc)
+add_executable(catalog_test unit_test/catalog_test.cc)
+
+add_executable(command src/bin/command.cc)
