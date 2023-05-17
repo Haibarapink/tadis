@@ -117,7 +117,13 @@ public:
     }
 
     void drop_table(const std::string &table_name)
-    {}
+    {
+      assert(has_table(table_name));
+      tables_.erase( table_name);
+      std::string meta_file = table_name + ".json";
+      remove(meta_file.c_str());
+      stm_.drop_table(table_name);
+    }
 
     bool has_table(const std::string &table_name)
     {

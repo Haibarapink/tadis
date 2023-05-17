@@ -13,6 +13,7 @@
 #include "expression/filter_expression.hpp"
 #include "execution/seqscan_executer.hpp"
 #include "execution/create_table_execution.hpp"
+#include "execution/drop_table_executer.hpp"
 #include "execution/error_executer.hpp"
 
 // bind a statement to an operator
@@ -202,7 +203,10 @@ private:
 
     Executer* bind_drop(SqlStmt* drop_stmt) {
       ctx_->result_.type_ = QueryType::DROP;
-      return error_executer(RC::SYNTAX_ERROR, "", QueryType::DROP);
+      auto& drop_table = drop_stmt->stmt<DropStmt>();
+      auto catalog = this->ctx_->catalog();
+      Executer* executer = new DropTableExecuter{catalog, drop_table.table_};
+      return executer;
     }
 
     Executer* bind_create(SqlStmt* create_stmt) {

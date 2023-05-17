@@ -1,4 +1,4 @@
-#include "bin/tabulate.hpp"
+#include "bin/tabulate.h"
 
 #include <iostream>
 #include <memory>
@@ -140,6 +140,7 @@ int main(int argc, char **argv)
 
   std::string in;
   while (!quit) {
+    std::cout << "TadisSQL>";
     std::getline(std::cin, in);
     if (!in.empty() && in.front() == '.') {
       cmd.run(in);
