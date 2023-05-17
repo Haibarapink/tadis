@@ -235,7 +235,7 @@ inline bool Parser::parse_utf8(String &s, unsigned u)
   if (u <= 0x7F) {
     s.push_back(u & 0xFF);
   } else if (u <= 0x7FF) {
-    s.push_back(0xC0 | (u >> 6) & 0xFF);
+    s.push_back(0xC0 | ((u >> 6) & 0xFF));
     s.push_back(0x80 | (u & 0x3F));
   } else if (u <= 0xFFFF) {
     s.push_back(0xE0 | ((u >> 12) & 0xFF));
@@ -394,7 +394,6 @@ inline bool Parser::parse_object(Value &v)
     skip_write_blank();
 
     Value val;
-    char ch = d[offset];
     if (d[offset] != ':')
       return false;
     ++offset;

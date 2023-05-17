@@ -16,6 +16,6 @@ public:
   }
 
 private:
-  std::string table_name_;
   Catalog* catalog_ = nullptr;
+  std::string table_name_;
 };

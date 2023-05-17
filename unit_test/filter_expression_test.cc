@@ -33,7 +33,6 @@ void basic_test()
 
   auto schema = table_schema();
   // age and name
-  auto projection_schema = out_schema(schema, {1, 2});
   auto tuple1 = Tuple::create_tuple(init_values(0, 20, "pink1"), schema);
   auto tuple2 = Tuple::create_tuple(init_values(1, 21, "pink2"), schema);
   auto tuple3 = Tuple::create_tuple(init_values(2, 20, "pink3"), schema);

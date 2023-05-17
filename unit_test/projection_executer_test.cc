@@ -29,7 +29,6 @@ void basic_test() {
 
   auto schema = table_schema();
   // age and name
-  auto projection_schema = out_schema(schema, {1,2});
   auto tuple1 = Tuple::create_tuple(init_values(0,20,"pink1"), schema);
   auto tuple2 = Tuple::create_tuple(init_values(1,21,"pink2"), schema);
   auto tuple3 = Tuple::create_tuple(init_values(2,20,"pink3"), schema);
@@ -54,7 +53,10 @@ void basic_test() {
   project.children_.push_back(std::unique_ptr<Executer>{seq_scan});
 
   Tuple * t = new Tuple{{}};
-  RC  rc = project.next(t);
+  auto rc = project.next(t);
+  if (!rc_success(rc)) {
+    std::cout << rc2str(rc) << std::endl;
+  }
   std::cout << t->to_string(project.schema_.get());
 
   remove("test.db");

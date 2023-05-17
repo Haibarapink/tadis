@@ -86,7 +86,7 @@ public:
     rc = exec->next(&t);
     pure_assert(rc == RC::SUCCESS);
     auto table = ct.get_table("student");
-
+    assert(table);
     std::cout << t.to_string(ctx.result_.output_schema_.get()) << std::endl;
 
     remove("student.db");

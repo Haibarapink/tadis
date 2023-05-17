@@ -9,7 +9,7 @@ namespace pson {
 
 #define PSON_ASSERT(expr)                                                         \
   do {                                                                            \
-    if (!expr) {                                                                  \
+    if (!(expr)) {                                                                  \
       fprintf(stderr, "[PSON-ASSERT][FILE: %s][LINE: %d]\n", __FILE__, __LINE__); \
       assert(true);                                                               \
     }                                                                             \

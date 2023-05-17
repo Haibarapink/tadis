@@ -528,6 +528,8 @@ inline Value::~Value()
     case JSON_OBJECT:
       delete val_.object_;
       break;
+    default:
+      break;
   }
 }
 
@@ -543,6 +545,8 @@ inline void Value::reset()
     case JSON_OBJECT:
       delete val_.object_;
       break;
+    default:
+      break ;
   }
   type_ = JSON_NULL;
   val_.null_ = Null{};
