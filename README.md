@@ -8,7 +8,7 @@
 -->
 
 # TadisSQL - A simple relational database
-
+![image](doc/db.png)
 
 ## Running 
 ![image](doc/tadis.png)
